@@ -4,4 +4,4 @@ buildCommand = "cd frontend && npm install && npm run build && cd ../backend && 
 
 [deploy]
 startCommand = "cd backend && /app/.venv/bin/python manage.py migrate && /app/.venv/bin/python manage.py collectstatic --noinput && /app/.venv/bin/gunicorn calproject.wsgi --bind 0.0.0.0:$PORT"
-healthcheckPath = "/api/todos/"
+healthcheckPath = "/health/"
