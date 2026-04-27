@@ -2,14 +2,16 @@ import { useRef, useState } from 'react'
 import { format } from 'date-fns'
 import { exportData, importData } from '../api.js'
 
-function Section({ title, description, buttonLabel, buttonClass, onClick }) {
+const btnClass = 'w-40 px-4 py-2 rounded-lg text-sm font-medium border border-blue-600 text-blue-600 bg-white hover:bg-blue-50'
+
+function Section({ title, description, buttonLabel, onClick }) {
   return (
     <div className="flex items-start justify-between py-4 border-b border-gray-100 last:border-0">
       <div className="pr-6">
         <p className="text-sm font-medium text-gray-800">{title}</p>
         <p className="text-xs text-gray-400 mt-0.5">{description}</p>
       </div>
-      <button onClick={onClick} className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium ${buttonClass}`}>
+      <button onClick={onClick} className={btnClass}>
         {buttonLabel}
       </button>
     </div>
@@ -38,8 +40,9 @@ export default function DataView() {
       a.download = `calapp-${format(new Date(), 'yyyy-MM-dd')}.json`
       a.click()
       URL.revokeObjectURL(url)
-      const { events, todos } = res.data
-      setFeedback(`Downloaded ${events.length} event(s) and ${todos.length} to-do(s).`)
+      const { events, todos, projects } = res.data
+      const tasks = projects.reduce((n, p) => n + p.tasks.length, 0)
+      setFeedback(`Downloaded ${events.length} event(s), ${todos.length} to-do(s), ${projects.length} project(s) and ${tasks} task(s).`)
     } catch {
       setFeedback('Download failed.', true)
     }
@@ -53,8 +56,8 @@ export default function DataView() {
       try {
         const data = JSON.parse(e.target.result)
         const res = await importData(data, clear)
-        const { imported_events, imported_todos } = res.data
-        setFeedback(`Imported ${imported_events} event(s) and ${imported_todos} to-do(s).`)
+        const { imported_events, imported_todos, imported_projects, imported_tasks } = res.data
+        setFeedback(`Imported ${imported_events} event(s), ${imported_todos} to-do(s), ${imported_projects} project(s) and ${imported_tasks} task(s).`)
       } catch {
         setFeedback('Import failed. Make sure the file is a valid CalApp backup.', true)
       }
@@ -75,25 +78,22 @@ export default function DataView() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-6">
         <Section
           title="Download"
-          description="Export all events and to-dos to a JSON backup file."
+          description="Export all events, to-dos, projects and tasks to a JSON backup file."
           buttonLabel="Download"
-          buttonClass="bg-blue-600 text-white hover:bg-blue-700"
           onClick={handleDownload}
         />
         <Section
           title="Upload"
-          description="Add events and to-dos from a backup file. Existing records are kept."
+          description="Add events, to-dos, projects and tasks from a backup file. Existing records are kept."
           buttonLabel="Upload"
-          buttonClass="bg-gray-100 text-gray-800 hover:bg-gray-200"
           onClick={() => triggerUpload(uploadRef, false)}
         />
         <Section
           title="Clear and Upload"
-          description="Delete all existing events and to-dos, then restore from a backup file."
+          description="Delete all existing data, then restore from a backup file."
           buttonLabel="Clear and Upload"
-          buttonClass="bg-red-50 text-red-600 hover:bg-red-100"
           onClick={() => {
-            if (confirm('This will delete all existing events and to-dos. Continue?')) {
+            if (confirm('This will delete all existing data. Continue?')) {
               triggerUpload(clearUploadRef, true)
             }
           }}

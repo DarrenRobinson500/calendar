@@ -171,6 +171,27 @@ def todo_reorder(request):
 def data_export(request):
     events = Event.objects.all().order_by('date')
     todos = ToDo.objects.all().order_by('order', 'id')
+    projects = Project.objects.all().order_by('name')
+
+    projects_data = []
+    for project in projects:
+        task_list = list(project.tasks.order_by('order', 'id'))
+        idx = {t.id: i for i, t in enumerate(task_list)}
+        projects_data.append({
+            'name': project.name,
+            'tasks': [
+                {
+                    'name': t.name,
+                    'description': t.description,
+                    'start_date': t.start_date.isoformat(),
+                    'end_date': t.end_date.isoformat(),
+                    'order': t.order,
+                    'depends_on': idx.get(t.depends_on_id) if t.depends_on_id else None,
+                }
+                for t in task_list
+            ],
+        })
+
     return Response({
         'events': [
             {'title': e.title, 'date': e.date.isoformat(), 'description': e.description}
@@ -186,6 +207,7 @@ def data_export(request):
             }
             for t in todos
         ],
+        'projects': projects_data,
     })
 
 
@@ -194,10 +216,12 @@ def data_import(request):
     clear = request.query_params.get('clear', 'false').lower() == 'true'
     events_data = request.data.get('events', [])
     todos_data = request.data.get('todos', [])
+    projects_data = request.data.get('projects', [])
 
     if clear:
         Event.objects.all().delete()
         ToDo.objects.all().delete()
+        Project.objects.all().delete()
 
     for e in events_data:
         Event.objects.create(
@@ -215,7 +239,33 @@ def data_import(request):
             order=t.get('order', 0),
         )
 
-    return Response({'imported_events': len(events_data), 'imported_todos': len(todos_data)})
+    imported_tasks = 0
+    for p in projects_data:
+        project = Project.objects.create(name=p['name'])
+        tasks_raw = p.get('tasks', [])
+        created = []
+        for t in tasks_raw:
+            created.append(Task.objects.create(
+                project=project,
+                name=t['name'],
+                description=t.get('description', ''),
+                start_date=t['start_date'],
+                end_date=t['end_date'],
+                order=t.get('order', 0),
+            ))
+            imported_tasks += 1
+        for i, t in enumerate(tasks_raw):
+            dep = t.get('depends_on')
+            if dep is not None and 0 <= dep < len(created):
+                created[i].depends_on = created[dep]
+                created[i].save(update_fields=['depends_on'])
+
+    return Response({
+        'imported_events': len(events_data),
+        'imported_todos': len(todos_data),
+        'imported_projects': len(projects_data),
+        'imported_tasks': imported_tasks,
+    })
 
 
 # ── Projects ──────────────────────────────────────────────────────────────────
