@@ -1,7 +1,7 @@
 [build]
 builder = "nixpacks"
-buildCommand = "cd frontend && npm install && npm run build && cd ../backend && python3 -m venv /app/.venv && /app/.venv/bin/pip install -r requirements.txt"
+buildCommand = "cd frontend && npm install && npm run build && cd ../backend && python3 -m venv /app/.venv && /app/.venv/bin/pip install -r requirements.txt && /app/.venv/bin/python manage.py collectstatic --noinput"
 
 [deploy]
-startCommand = "cd backend && /app/.venv/bin/python manage.py migrate && /app/.venv/bin/python manage.py collectstatic --noinput && /app/.venv/bin/gunicorn calproject.wsgi --bind 0.0.0.0:$PORT"
+startCommand = "cd backend && /app/.venv/bin/python manage.py migrate && /app/.venv/bin/gunicorn calproject.wsgi --bind 0.0.0.0:$PORT"
 healthcheckPath = "/health/"
