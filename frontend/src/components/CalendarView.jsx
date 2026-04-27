@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { format, startOfMonth, getDay, getDaysInMonth, addMonths, subMonths, parseISO } from 'date-fns'
-import { getCalendar, markTodoDone } from '../api.js'
+import { getCalendar, markTodoDone, markTaskDone } from '../api.js'
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -32,12 +32,20 @@ export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, o
     setSearchParams({ month: isoMonth(next) })
   }
 
-  const handleDone = async (todoId) => {
-    await markTodoDone(todoId)
-    // trigger re-fetch by bumping the month param (same value re-runs the effect via refreshKey)
+  const refetch = () => {
     setData(null)
     setLoading(true)
     getCalendar(monthParam).then((res) => { setData(res.data); setLoading(false) })
+  }
+
+  const handleDone = async (todoId) => {
+    await markTodoDone(todoId)
+    refetch()
+  }
+
+  const handleTaskDone = async (taskId) => {
+    await markTaskDone(taskId)
+    refetch()
   }
 
   const todayKey = format(new Date(), 'yyyy-MM-dd')
@@ -137,10 +145,18 @@ export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, o
                   <div
                     key={`pt-${pt.id}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="text-xs bg-violet-100 text-violet-800 rounded px-1 py-0.5 truncate"
-                    title={`${pt.project_name} — ${pt.name}`}
+                    className="flex items-center gap-1 text-xs bg-violet-100 text-violet-800 rounded px-1 py-0.5"
                   >
-                    {pt.project_name} – {pt.name}
+                    <span className="flex-1 truncate" title={`${pt.project_name} — ${pt.name}`}>
+                      {pt.project_name} – {pt.name}
+                    </span>
+                    <button
+                      onClick={() => handleTaskDone(pt.id)}
+                      className="shrink-0 hover:scale-110 transition-transform"
+                      title="Mark done"
+                    >
+                      ✓
+                    </button>
                   </div>
                 ))}
               </div>

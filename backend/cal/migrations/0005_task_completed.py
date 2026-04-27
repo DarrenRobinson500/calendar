@@ -1,0 +1,16 @@
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('cal', '0004_project_task'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='task',
+            name='completed',
+            field=models.BooleanField(default=False),
+        ),
+    ]

@@ -44,6 +44,7 @@ class Task(models.Model):
     depends_on = models.ForeignKey(
         'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='dependents'
     )
+    completed = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['order', 'id']

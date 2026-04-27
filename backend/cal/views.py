@@ -63,6 +63,7 @@ def calendar_view(request):
     project_tasks = Task.objects.filter(
         start_date__lte=last_day,
         end_date__gte=first_day,
+        completed=False,
     ).select_related('project').order_by('project__name', 'order', 'id')
 
     for task in project_tasks:
@@ -330,6 +331,17 @@ def task_detail(request, pk):
         return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
     task.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+def task_done(request, pk):
+    try:
+        task = Task.objects.get(pk=pk)
+    except Task.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    task.completed = not task.completed
+    task.save()
+    return Response(TaskSerializer(task).data)
 
 
 @api_view(['POST'])

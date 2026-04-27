@@ -79,7 +79,7 @@ function DateHeader() {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreate, onDeleteLink, onTaskEdit, selectedTaskId, onTaskSelect }) {
+export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreate, onDeleteLink, onTaskEdit, selectedTaskId, onTaskSelect, onTaskDone }) {
   const [localTasks, setLocalTasks] = useState(propTasks)
   const [tooltip, setTooltip] = useState(null)   // { text, x, y }
   const [linkDrag, setLinkDrag] = useState(null)  // { fromId, x, y }
@@ -314,10 +314,17 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
                     onMouseDown={(e) => { e.stopPropagation(); startBarDrag(e, task.id, 'reorder') }}
                   >⠿</span>
                   <span
-                    style={{ fontSize: 13, color: isSelected ? '#4338ca' : '#374151', fontWeight: isSelected ? 600 : 400, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flex: 1 }}
+                    style={{ fontSize: 13, color: task.completed ? '#9ca3af' : isSelected ? '#4338ca' : '#374151', fontWeight: isSelected ? 600 : 400, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flex: 1, textDecoration: task.completed ? 'line-through' : 'none' }}
                     onDoubleClick={(e) => { e.stopPropagation(); onTaskEdit(task) }}
                     title="Double-click to edit"
                   >{task.name}</span>
+                  {onTaskDone && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onTaskDone(task.id) }}
+                      style={{ flexShrink: 0, fontSize: 13, color: task.completed ? '#9ca3af' : '#6b7280', background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}
+                      title={task.completed ? 'Mark incomplete' : 'Mark done'}
+                    >✓</button>
+                  )}
                 </div>
 
                 {/* Chart lane */}
@@ -333,7 +340,7 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
 
                   {/* Task bar */}
                   <div
-                    style={{ position: 'absolute', top: px(12), left: px(barL), width: px(barW), height: px(ROW_H - 24), background: isLinkTarget ? '#818cf8' : isSelected ? '#6366f1' : '#4f46e5', borderRadius: 4, display: 'flex', alignItems: 'center', userSelect: 'none', zIndex: 6, boxShadow: isSelected ? '0 0 0 2px #a5b4fc' : '0 1px 3px rgba(0,0,0,.15)', cursor: 'move' }}
+                    style={{ position: 'absolute', top: px(12), left: px(barL), width: px(barW), height: px(ROW_H - 24), background: task.completed ? '#d1d5db' : isLinkTarget ? '#818cf8' : isSelected ? '#6366f1' : '#4f46e5', borderRadius: 4, display: 'flex', alignItems: 'center', userSelect: 'none', zIndex: 6, boxShadow: isSelected ? '0 0 0 2px #a5b4fc' : '0 1px 3px rgba(0,0,0,.15)', cursor: 'move' }}
                     onClick={() => { if (!lastDraggedRef.current) onTaskSelect(isSelected ? null : task.id) }}
                     onMouseDown={(e) => {
                       const localX = e.clientX - e.currentTarget.getBoundingClientRect().left

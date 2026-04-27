@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { addDays, differenceInDays, format, parseISO } from 'date-fns'
 import {
   getProjects, getTasks, updateTask,
-  reorderTasks, bulkUpdateTasks,
+  reorderTasks, bulkUpdateTasks, markTaskDone,
 } from '../api.js'
 import GanttChart from './GanttChart.jsx'
 import ProjectFormModal from './ProjectFormModal.jsx'
@@ -53,6 +53,11 @@ export default function ProjectView() {
 
   const refreshTasks = () =>
     getTasks(selectedId).then(res => setTasks(res.data))
+
+  const handleTaskDone = async (taskId) => {
+    await markTaskDone(taskId)
+    await refreshTasks()
+  }
 
   const handleSave = async (updatedTasks, type) => {
     if (type === 'reorder') {
@@ -204,6 +209,7 @@ export default function ProjectView() {
           onTaskEdit={(task) => setTaskModal({ open: true, task, anchorTaskId: null, defaultStartDate: null })}
           selectedTaskId={selectedTaskId}
           onTaskSelect={setSelectedTaskId}
+          onTaskDone={handleTaskDone}
         />
       )}
 

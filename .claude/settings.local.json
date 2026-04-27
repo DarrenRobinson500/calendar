@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Skill(update-config)",
-      "PowerShell($json = '{\"tool_name\":\"TaskCreate\",\"tool_input\":{},\"tool_response\":{\"taskId\":\"abc-123\",\"title\":\"Test task\"}}'; $input = $json | ConvertFrom-Json; $id = if \\($input.tool_response.taskId\\) { $input.tool_response.taskId } elseif \\($input.tool_response.id\\) { $input.tool_response.id } else { 'unknown' }; @{hookSpecificOutput = @{hookEventName = 'PostToolUse'; additionalContext = \"Task created. Call TaskGet with id '$id' to select it.\"}} | ConvertTo-Json -Compress)"
+      "PowerShell($json = '{\"tool_name\":\"TaskCreate\",\"tool_input\":{},\"tool_response\":{\"taskId\":\"abc-123\",\"title\":\"Test task\"}}'; $input = $json | ConvertFrom-Json; $id = if \\($input.tool_response.taskId\\) { $input.tool_response.taskId } elseif \\($input.tool_response.id\\) { $input.tool_response.id } else { 'unknown' }; @{hookSpecificOutput = @{hookEventName = 'PostToolUse'; additionalContext = \"Task created. Call TaskGet with id '$id' to select it.\"}} | ConvertTo-Json -Compress)",
+      "Bash(git rm *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
