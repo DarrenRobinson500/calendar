@@ -17,7 +17,7 @@ class ToDoSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'active']
 
 
 class TaskSerializer(serializers.ModelSerializer):

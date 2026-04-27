@@ -64,6 +64,7 @@ def calendar_view(request):
         start_date__lte=last_day,
         end_date__gte=first_day,
         completed=False,
+        project__active=True,
     ).select_related('project').order_by('project__name', 'order', 'id')
 
     for task in project_tasks:

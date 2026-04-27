@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { addDays, differenceInDays, format, parseISO } from 'date-fns'
 import {
   getProjects, getTasks, updateTask,
-  reorderTasks, bulkUpdateTasks, markTaskDone,
+  reorderTasks, bulkUpdateTasks, markTaskDone, updateProject,
 } from '../api.js'
 import GanttChart from './GanttChart.jsx'
 import ProjectFormModal from './ProjectFormModal.jsx'
@@ -117,6 +117,13 @@ export default function ProjectView() {
     setShowProjectModal(false)
   }
 
+  const handleToggleActive = async () => {
+    const project = projects.find(p => p.id === selectedId)
+    if (!project) return
+    const res = await updateProject(selectedId, { name: project.name, active: !project.active })
+    setProjects(prev => prev.map(p => p.id === selectedId ? res.data : p))
+  }
+
   const handleTaskSaved = async (savedInfo) => {
     const { anchorTaskId } = taskModal
     setTaskModal({ open: false, task: null, anchorTaskId: null, defaultStartDate: null })
@@ -137,6 +144,9 @@ export default function ProjectView() {
         await reorderTasks(reordered.map(t => t.id))
       }
       await refreshTasks()
+      setSelectedTaskId(savedInfo.id)
+    } else if (savedInfo?.isNew && savedInfo?.id) {
+      setSelectedTaskId(savedInfo.id)
     } else if (savedInfo?.id && savedInfo?.end_date) {
       // Cascade dependents if this was an edit with a changed end_date
       const cascaded = cascadeFrom(freshTasks, savedInfo.id, parseISO(savedInfo.end_date))
@@ -174,6 +184,18 @@ export default function ProjectView() {
         >
           + New Project
         </button>
+
+        {selectedId && (() => {
+          const project = projects.find(p => p.id === selectedId)
+          return (
+            <button
+              onClick={handleToggleActive}
+              className={`px-3 py-1.5 text-sm rounded-lg border ${project?.active ? 'border-amber-300 text-amber-700 hover:bg-amber-50' : 'border-green-300 text-green-700 hover:bg-green-50'}`}
+            >
+              {project?.active ? 'Deactivate' : 'Activate'}
+            </button>
+          )
+        })()}
 
         {selectedId && (
           <button

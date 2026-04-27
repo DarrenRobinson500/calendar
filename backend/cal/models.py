@@ -26,6 +26,7 @@ class ToDo(models.Model):
 
 class Project(models.Model):
     name = models.CharField(max_length=255)
+    active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['name']
