@@ -79,7 +79,7 @@ function DateHeader() {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreate, onDeleteLink, onTaskEdit, selectedTaskId, onTaskSelect, onTaskDone }) {
+export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreate, onDeleteLink, onTaskEdit, selectedTaskId, onTaskSelect, onTaskDone, isMultiProject }) {
   const [localTasks, setLocalTasks] = useState(propTasks)
   const [tooltip, setTooltip] = useState(null)   // { text, x, y }
   const [linkDrag, setLinkDrag] = useState(null)  // { fromId, x, y }
@@ -141,7 +141,7 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
       const chartY = mouseChartY(e)
       const idx = Math.floor(chartY / ROW_H)
       const tasks = localTasksRef.current
-      const hov = idx >= 0 && idx < tasks.length ? tasks[idx].id : null
+      const hov = idx >= 0 && idx < tasks.length && !tasks[idx]?.isHeader ? tasks[idx].id : null
       setLinkHover(hov === drag.fromId ? null : hov)
       return
     }
@@ -196,16 +196,17 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
       const idx = Math.floor(mouseChartY(e) / ROW_H)
       if (idx >= 0 && idx < tasks.length) {
         const target = tasks[idx]
-        if (target.id !== drag.fromId) onDependencyCreate(target.id, drag.fromId)
+        if (target && !target.isHeader && target.id !== drag.fromId) onDependencyCreate(target.id, drag.fromId)
       }
       setLinkDrag(null); setLinkHover(null)
       return
     }
 
+    const realTasks = localTasksRef.current.filter(t => !t.isHeader)
     if (drag.type === 'reorder') {
-      onSave(localTasksRef.current, 'reorder')
+      onSave(realTasks, 'reorder')
     } else {
-      onSave(localTasksRef.current, 'dates')
+      onSave(realTasks, 'dates')
     }
   }, [onSave, onDependencyCreate])
 
@@ -232,7 +233,7 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
   // ── dependency arrows ───────────────────────────────────────────────────────
 
   const arrows = localTasks
-    .filter(t => t.depends_on != null)
+    .filter(t => t.depends_on != null && !t.isHeader)
     .flatMap(t => {
       const pred = localTasks.find(p => p.id === t.depends_on)
       if (!pred) return []
@@ -296,6 +297,17 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
 
           {/* Task rows */}
           {localTasks.map((task, idx) => {
+            if (task.isHeader) {
+              return (
+                <div key={task.id} style={{ display: 'flex', height: px(ROW_H), borderBottom: '1px solid #d1d5db' }}>
+                  <div style={{ width: px(SIDEBAR_W), flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e5e7eb', position: 'sticky', left: 0, background: '#f3f4f6', zIndex: 10 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{task.name}</span>
+                  </div>
+                  <div style={{ width: px(TOTAL_DAYS * DAY_W), background: '#f9fafb', flexShrink: 0 }} />
+                </div>
+              )
+            }
+
             const barL = d2x(task.start_date)
             const barR = d2x(task.end_date) + DAY_W
             const barW = Math.max(DAY_W, barR - barL)
@@ -309,10 +321,12 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
                 <div
                   onClick={() => onTaskSelect(isSelected ? null : task.id)}
                   style={{ width: px(SIDEBAR_W), flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '0 10px', borderRight: '1px solid #e5e7eb', borderLeft: isSelected ? '3px solid #4f46e5' : '3px solid transparent', position: 'sticky', left: 0, background: isSelected ? '#eef2ff' : 'white', zIndex: 10, cursor: 'pointer' }}>
-                  <span
-                    style={{ cursor: 'grab', color: '#d1d5db', fontSize: 15, userSelect: 'none', flexShrink: 0 }}
-                    onMouseDown={(e) => { e.stopPropagation(); startBarDrag(e, task.id, 'reorder') }}
-                  >⠿</span>
+                  {!isMultiProject && (
+                    <span
+                      style={{ cursor: 'grab', color: '#d1d5db', fontSize: 15, userSelect: 'none', flexShrink: 0 }}
+                      onMouseDown={(e) => { e.stopPropagation(); startBarDrag(e, task.id, 'reorder') }}
+                    >⠿</span>
+                  )}
                   <span
                     style={{ fontSize: 13, color: task.completed ? '#9ca3af' : isSelected ? '#4338ca' : '#374151', fontWeight: isSelected ? 600 : 400, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flex: 1, textDecoration: task.completed ? 'line-through' : 'none' }}
                     onDoubleClick={(e) => { e.stopPropagation(); onTaskEdit(task) }}
@@ -375,7 +389,7 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
             )
           })}
 
-          {localTasks.length === 0 && (
+          {localTasks.filter(t => !t.isHeader).length === 0 && (
             <div style={{ padding: '48px 24px', textAlign: 'center', color: '#9ca3af', fontSize: 14 }}>
               No tasks yet — click <strong>+ Add Task</strong> to get started.
             </div>

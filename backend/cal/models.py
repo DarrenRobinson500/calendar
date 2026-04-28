@@ -27,9 +27,10 @@ class ToDo(models.Model):
 class Project(models.Model):
     name = models.CharField(max_length=255)
     active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['order', 'name']
 
     def __str__(self):
         return self.name

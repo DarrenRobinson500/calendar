@@ -12,6 +12,7 @@ urlpatterns = [
     path('data/export/', views.data_export),
     path('data/import/', views.data_import),
     path('projects/', views.project_list),
+    path('projects/reorder/', views.project_reorder),
     path('projects/<int:pk>/', views.project_detail),
     path('tasks/', views.task_list),
     path('tasks/reorder/', views.task_reorder),

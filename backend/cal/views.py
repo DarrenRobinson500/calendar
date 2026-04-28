@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 import calendar
 
-from django.utils.timezone import now
+from django.utils.timezone import now, localdate
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -13,7 +13,7 @@ from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, Tas
 @api_view(['GET'])
 def calendar_view(request):
     month_param = request.query_params.get('month')
-    today = date.today()
+    today = localdate()
 
     if month_param:
         try:
@@ -156,7 +156,7 @@ def todo_done(request, pk):
     except ToDo.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    todo.next_due = date.today() + timedelta(days=todo.frequency_days)
+    todo.next_due = localdate() + timedelta(days=todo.frequency_days)
     todo.save()
     return Response(ToDoSerializer(todo).data)
 
@@ -275,12 +275,19 @@ def data_import(request):
 @api_view(['GET', 'POST'])
 def project_list(request):
     if request.method == 'GET':
-        return Response(ProjectSerializer(Project.objects.all(), many=True).data)
+        return Response(ProjectSerializer(Project.objects.all().order_by('order', 'name'), many=True).data)
     s = ProjectSerializer(data=request.data)
     if s.is_valid():
         s.save()
         return Response(s.data, status=status.HTTP_201_CREATED)
     return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def project_reorder(request):
+    for position, project_id in enumerate(request.data):
+        Project.objects.filter(pk=project_id).update(order=position)
+    return Response({'status': 'ok'})
 
 
 @api_view(['GET', 'PUT', 'DELETE'])

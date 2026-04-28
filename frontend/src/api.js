@@ -21,6 +21,7 @@ export const getProjects = () => api.get('/projects/')
 export const createProject = (data) => api.post('/projects/', data)
 export const updateProject = (id, data) => api.put(`/projects/${id}/`, data)
 export const deleteProject = (id) => api.delete(`/projects/${id}/`)
+export const reorderProjects = (orderedIds) => api.post('/projects/reorder/', orderedIds)
 
 export const getTasks = (projectId) => api.get(`/tasks/?project=${projectId}`)
 export const createTask = (data) => api.post('/tasks/', data)
