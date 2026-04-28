@@ -34,6 +34,8 @@ export default function ProjectView() {
   const [showProjectModal, setShowProjectModal] = useState(false)
   const [taskModal, setTaskModal] = useState({ open: false, task: null, anchorTaskId: null, defaultStartDate: null, projectId: null })
   const [selectedTaskId, setSelectedTaskId] = useState(null)
+  const [dragProjectIdx, setDragProjectIdx] = useState(null)
+  const [dragOverProjectIdx, setDragOverProjectIdx] = useState(null)
 
   // Load projects on mount
   useEffect(() => {
@@ -75,22 +77,41 @@ export default function ProjectView() {
     .filter(p => visibleProjectIds.has(p.id))
     .flatMap(p => {
       const tasks = tasksByProject[p.id] || []
-      if (isMultiProject) {
-        return [{ id: `header-${p.id}`, isHeader: true, name: p.name }, ...tasks]
-      }
-      return tasks
+      return [{ id: `header-${p.id}`, isHeader: true, name: p.name, projectId: p.id }, ...tasks]
     })
 
   // ── Project management ────────────────────────────────────────────────────────
 
-  const moveProject = async (idx, dir) => {
-    const newIdx = idx + dir
-    if (newIdx < 0 || newIdx >= projects.length) return
+  const handleProjectDragStart = (e, idx) => {
+    setDragProjectIdx(idx)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleProjectDragOver = (e, idx) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverProjectIdx(idx)
+  }
+
+  const handleProjectDrop = async (e, idx) => {
+    e.preventDefault()
+    if (dragProjectIdx === null || dragProjectIdx === idx) {
+      setDragProjectIdx(null)
+      setDragOverProjectIdx(null)
+      return
+    }
     const reordered = [...projects]
-    const [moved] = reordered.splice(idx, 1)
-    reordered.splice(newIdx, 0, moved)
+    const [moved] = reordered.splice(dragProjectIdx, 1)
+    reordered.splice(idx, 0, moved)
     setProjects(reordered)
+    setDragProjectIdx(null)
+    setDragOverProjectIdx(null)
     await reorderProjects(reordered.map(p => p.id))
+  }
+
+  const handleProjectDragEnd = () => {
+    setDragProjectIdx(null)
+    setDragOverProjectIdx(null)
   }
 
   const toggleVisible = (id) => {
@@ -133,7 +154,13 @@ export default function ProjectView() {
   const handleSave = async (updatedTasks, type) => {
     const realTasks = updatedTasks.filter(t => !t.isHeader)
     if (type === 'reorder') {
-      await reorderTasks(realTasks.map(t => t.id))
+      // Save per-project so cross-project drags don't corrupt order values
+      await Promise.all([...visibleProjectIds].map(pid => {
+        const ids = realTasks
+          .filter(t => tasksByProject[pid]?.some(orig => orig.id === t.id))
+          .map(t => t.id)
+        return reorderTasks(ids)
+      }))
     } else {
       await bulkUpdateTasks(realTasks.map(t => ({ id: t.id, start_date: t.start_date, end_date: t.end_date })))
     }
@@ -242,8 +269,8 @@ export default function ProjectView() {
     <div className="max-w-7xl mx-auto">
 
       {/* Project management panel */}
-      <div className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
-        <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
+      <div className="mb-4 border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200 rounded-t-lg">
           <span className="text-sm font-semibold text-gray-700">Projects</span>
           <button
             onClick={() => setShowProjectModal(true)}
@@ -257,23 +284,23 @@ export default function ProjectView() {
             <div
               key={p.id}
               onClick={() => setActiveProjectId(p.id)}
+              onDragOver={(e) => handleProjectDragOver(e, idx)}
+              onDrop={(e) => handleProjectDrop(e, idx)}
+              onDragEnd={handleProjectDragEnd}
               className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer ${activeProjectId === p.id ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
+              style={{
+                borderTop: dragOverProjectIdx === idx && dragProjectIdx !== null && dragProjectIdx > idx ? '2px solid #818cf8' : '2px solid transparent',
+                borderBottom: dragOverProjectIdx === idx && dragProjectIdx !== null && dragProjectIdx < idx ? '2px solid #818cf8' : '2px solid transparent',
+              }}
             >
-              {/* Reorder buttons */}
-              <div className="flex flex-col shrink-0" onClick={e => e.stopPropagation()}>
-                <button
-                  onClick={() => moveProject(idx, -1)}
-                  disabled={idx === 0}
-                  className="text-gray-400 hover:text-gray-600 disabled:opacity-20 text-xs leading-none py-px"
-                  title="Move up"
-                >▲</button>
-                <button
-                  onClick={() => moveProject(idx, 1)}
-                  disabled={idx === projects.length - 1}
-                  className="text-gray-400 hover:text-gray-600 disabled:opacity-20 text-xs leading-none py-px"
-                  title="Move down"
-                >▼</button>
-              </div>
+              {/* Drag handle */}
+              <span
+                draggable
+                onDragStart={(e) => { e.stopPropagation(); handleProjectDragStart(e, idx) }}
+                onClick={e => e.stopPropagation()}
+                className="text-gray-300 hover:text-gray-500 cursor-grab shrink-0 select-none text-base"
+                title="Drag to reorder"
+              >⠿</span>
 
               {/* Visibility checkbox */}
               <input
@@ -290,6 +317,21 @@ export default function ProjectView() {
                 {!p.active && <span className="text-xs ml-1">(inactive)</span>}
               </span>
 
+              {/* Add Task */}
+              <button
+                onClick={e => {
+                  e.stopPropagation()
+                  setActiveProjectId(p.id)
+                  const anchor = selectedTaskId && tasksByProject[p.id]?.some(t => t.id === selectedTaskId)
+                    ? ganttRows.find(t => !t.isHeader && t.id === selectedTaskId)
+                    : null
+                  const defaultStart = anchor ? format(addDays(parseISO(anchor.end_date), 1), 'yyyy-MM-dd') : null
+                  setTaskModal({ open: true, task: null, anchorTaskId: anchor?.id ?? null, defaultStartDate: defaultStart, projectId: p.id })
+                }}
+                className="text-xs px-2 py-0.5 rounded border border-indigo-300 text-indigo-600 hover:bg-indigo-50 shrink-0"
+                title="Add task to this project"
+              >+ Task</button>
+
               {/* Activate / Deactivate */}
               <button
                 onClick={e => { e.stopPropagation(); handleToggleActive(p.id) }}
@@ -305,32 +347,12 @@ export default function ProjectView() {
         </div>
       </div>
 
-      {/* Gantt toolbar */}
-      <div className="flex items-center gap-3 mb-3 flex-wrap">
-        {activeProjectId && (
-          <button
-            onClick={() => {
-              const anchor = selectedTaskId ? ganttRows.find(t => !t.isHeader && t.id === selectedTaskId) : null
-              const defaultStart = anchor
-                ? format(addDays(parseISO(anchor.end_date), 1), 'yyyy-MM-dd')
-                : null
-              setTaskModal({ open: true, task: null, anchorTaskId: anchor?.id ?? null, defaultStartDate: defaultStart, projectId: activeProjectId })
-            }}
-            className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-          >
-            + Add Task
-          </button>
-        )}
-        {isMultiProject && activeProjectId && (
-          <span className="text-xs text-gray-500">
-            Adding to: <strong className="text-indigo-600">{projects.find(p => p.id === activeProjectId)?.name}</strong>
-            <span className="text-gray-400"> — click a project row above to change</span>
-          </span>
-        )}
-        {!isMultiProject && visibleProjectIds.size > 0 && (
+      {/* Gantt hints */}
+      {!isMultiProject && visibleProjectIds.size > 0 && (
+        <div className="mb-3">
           <span className="text-xs text-gray-400">Drag bar edges to resize · Drag bar to move · ● to link · ⠿ to reorder · double-click to edit</span>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Gantt chart */}
       {projects.length === 0 ? (
@@ -350,6 +372,10 @@ export default function ProjectView() {
           onTaskSelect={handleTaskSelect}
           onTaskDone={handleTaskDone}
           isMultiProject={isMultiProject}
+          onAddTask={(projectId) => {
+            setActiveProjectId(projectId)
+            setTaskModal({ open: true, task: null, anchorTaskId: null, defaultStartDate: null, projectId })
+          }}
         />
       )}
 

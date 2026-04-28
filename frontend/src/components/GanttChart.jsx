@@ -79,12 +79,13 @@ function DateHeader() {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreate, onDeleteLink, onTaskEdit, selectedTaskId, onTaskSelect, onTaskDone, isMultiProject }) {
+export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreate, onDeleteLink, onTaskEdit, selectedTaskId, onTaskSelect, onTaskDone, isMultiProject, onAddTask }) {
   const [localTasks, setLocalTasks] = useState(propTasks)
   const [tooltip, setTooltip] = useState(null)   // { text, x, y }
   const [linkDrag, setLinkDrag] = useState(null)  // { fromId, x, y }
   const [linkHover, setLinkHover] = useState(null)
   const [selectedArrow, setSelectedArrow] = useState(null) // { key, dependentId }
+  const [reorderDrag, setReorderDrag] = useState(null) // { taskId, fromIdx }
 
   const containerRef = useRef(null)
   const dragRef = useRef(null)
@@ -109,14 +110,16 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
     e.preventDefault(); e.stopPropagation()
     const task = localTasksRef.current.find(t => t.id === taskId)
     lastDraggedRef.current = false
+    const origIdx = localTasksRef.current.findIndex(t => t.id === taskId)
     dragRef.current = {
       type: dtype, taskId,
       startMouseX: e.clientX, startMouseY: e.clientY,
       origStart: task.start_date, origEnd: task.end_date,
       snapshot: localTasksRef.current.map(t => ({ ...t })),
-      origIdx: localTasksRef.current.findIndex(t => t.id === taskId),
+      origIdx,
       curIdx: null,
     }
+    if (dtype === 'reorder') setReorderDrag({ taskId, fromIdx: origIdx })
   }
 
   const startLinkDrag = (e, taskId) => {
@@ -190,6 +193,7 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
     const drag = dragRef.current
     if (!drag) return
     dragRef.current = null
+    setReorderDrag(null)
 
     if (drag.type === 'link') {
       const tasks = localTasksRef.current
@@ -248,7 +252,7 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
   const totalH = Math.max(localTasks.length * ROW_H, 1)
 
   return (
-    <div ref={containerRef} style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '72vh', border: '1px solid #e5e7eb', borderRadius: 8, position: 'relative', background: 'white' }}>
+    <div ref={containerRef} style={{ overflowX: 'auto', overflowY: 'visible', border: '1px solid #e5e7eb', borderRadius: 8, position: 'relative', background: 'white' }}>
       <div style={{ width: px(SIDEBAR_W + TOTAL_DAYS * DAY_W), minWidth: '100%' }}>
 
         {/* ── sticky header ── */}
@@ -300,8 +304,15 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
             if (task.isHeader) {
               return (
                 <div key={task.id} style={{ display: 'flex', height: px(ROW_H), borderBottom: '1px solid #d1d5db' }}>
-                  <div style={{ width: px(SIDEBAR_W), flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e5e7eb', position: 'sticky', left: 0, background: '#f3f4f6', zIndex: 10 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{task.name}</span>
+                  <div style={{ width: px(SIDEBAR_W), flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px', borderRight: '1px solid #e5e7eb', position: 'sticky', left: 0, background: '#f3f4f6', zIndex: 10 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{task.name}</span>
+                    {onAddTask && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onAddTask(task.projectId) }}
+                        style={{ fontSize: 10, padding: '1px 5px', borderRadius: 4, border: '1px solid #a5b4fc', color: '#4f46e5', background: 'white', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+                        title="Add task"
+                      >+ Task</button>
+                    )}
                   </div>
                   <div style={{ width: px(TOTAL_DAYS * DAY_W), background: '#f9fafb', flexShrink: 0 }} />
                 </div>
@@ -315,18 +326,16 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
             const isSelected = selectedTaskId === task.id
 
             return (
-              <div key={task.id} style={{ display: 'flex', height: px(ROW_H), borderBottom: '1px solid #f3f4f6' }}>
+              <div key={task.id} style={{ display: 'flex', height: px(ROW_H), borderBottom: reorderDrag?.taskId === task.id && reorderDrag.fromIdx < idx ? '2px solid #818cf8' : '1px solid #f3f4f6', borderTop: reorderDrag?.taskId === task.id && reorderDrag.fromIdx > idx ? '2px solid #818cf8' : undefined }}>
 
                 {/* Sidebar */}
                 <div
                   onClick={() => onTaskSelect(isSelected ? null : task.id)}
                   style={{ width: px(SIDEBAR_W), flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '0 10px', borderRight: '1px solid #e5e7eb', borderLeft: isSelected ? '3px solid #4f46e5' : '3px solid transparent', position: 'sticky', left: 0, background: isSelected ? '#eef2ff' : 'white', zIndex: 10, cursor: 'pointer' }}>
-                  {!isMultiProject && (
-                    <span
-                      style={{ cursor: 'grab', color: '#d1d5db', fontSize: 15, userSelect: 'none', flexShrink: 0 }}
-                      onMouseDown={(e) => { e.stopPropagation(); startBarDrag(e, task.id, 'reorder') }}
-                    >⠿</span>
-                  )}
+                  <span
+                    style={{ cursor: 'grab', color: '#d1d5db', fontSize: 15, userSelect: 'none', flexShrink: 0 }}
+                    onMouseDown={(e) => { e.stopPropagation(); startBarDrag(e, task.id, 'reorder') }}
+                  >⠿</span>
                   <span
                     style={{ fontSize: 13, color: task.completed ? '#9ca3af' : isSelected ? '#4338ca' : '#374151', fontWeight: isSelected ? 600 : 400, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flex: 1, textDecoration: task.completed ? 'line-through' : 'none' }}
                     onDoubleClick={(e) => { e.stopPropagation(); onTaskEdit(task) }}
