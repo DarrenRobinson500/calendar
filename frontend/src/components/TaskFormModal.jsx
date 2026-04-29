@@ -15,9 +15,11 @@ export default function TaskFormModal({ task, projectId, defaultStartDate, onSuc
     description: task?.description || '',
     start_date: task?.start_date || defaultStartDate || today,
     duration: task ? durationFromDates(task.start_date, task.end_date) : 1,
+    completed: task?.completed || false,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
 
@@ -34,7 +36,7 @@ export default function TaskFormModal({ task, projectId, defaultStartDate, onSuc
     }
     setSaving(true)
     setError(null)
-    const payload = { name: form.name, description: form.description, start_date: form.start_date, end_date: computedEndDate }
+    const payload = { name: form.name, description: form.description, start_date: form.start_date, end_date: computedEndDate, completed: form.completed }
     try {
       if (isEdit) {
         await updateTask(task.id, { ...payload, project: task.project, depends_on: task.depends_on, order: task.order })
@@ -50,7 +52,6 @@ export default function TaskFormModal({ task, projectId, defaultStartDate, onSuc
   }
 
   const handleDelete = async () => {
-    if (!confirm('Delete this task?')) return
     setSaving(true)
     try {
       await deleteTask(task.id)
@@ -58,6 +59,7 @@ export default function TaskFormModal({ task, projectId, defaultStartDate, onSuc
     } catch {
       setError('Failed to delete task.')
       setSaving(false)
+      setConfirmingDelete(false)
     }
   }
 
@@ -93,17 +95,42 @@ export default function TaskFormModal({ task, projectId, defaultStartDate, onSuc
             </div>
           </div>
           <p className="text-xs text-gray-400 -mt-2">End date: {computedEndDate}</p>
-          <div className="flex items-center justify-between pt-1">
-            {isEdit
-              ? <button type="button" onClick={handleDelete} disabled={saving} className="text-red-500 hover:underline text-sm">Delete</button>
-              : <span />}
-            <div className="flex gap-2">
-              <button type="button" onClick={onClose} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-              <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                {saving ? 'Saving…' : isEdit ? 'Save' : 'Create'}
-              </button>
+          {isEdit && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.completed}
+                onChange={(e) => setForm(f => ({ ...f, completed: e.target.checked }))}
+                className="w-4 h-4 rounded accent-indigo-600"
+              />
+              <span className="text-sm text-gray-700">Completed</span>
+            </label>
+          )}
+          {confirmingDelete ? (
+            <div className="flex items-center justify-between pt-1 border-t border-red-100 bg-red-50 -mx-6 px-6 py-3 rounded-b-xl">
+              <p className="text-sm text-red-700 font-medium">Delete this task?</p>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setConfirmingDelete(false)} className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                  Cancel
+                </button>
+                <button type="button" onClick={handleDelete} disabled={saving} className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">
+                  {saving ? 'Deleting…' : 'Yes, delete'}
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center justify-between pt-1">
+              {isEdit
+                ? <button type="button" onClick={() => setConfirmingDelete(true)} className="text-red-500 hover:text-red-700 text-sm">Delete</button>
+                : <span />}
+              <div className="flex gap-2">
+                <button type="button" onClick={onClose} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                  {saving ? 'Saving…' : isEdit ? 'Save' : 'Create'}
+                </button>
+              </div>
+            </div>
+          )}
         </form>
       </div>
     </div>

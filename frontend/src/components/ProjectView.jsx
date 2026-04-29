@@ -374,7 +374,11 @@ export default function ProjectView() {
           isMultiProject={isMultiProject}
           onAddTask={(projectId) => {
             setActiveProjectId(projectId)
-            setTaskModal({ open: true, task: null, anchorTaskId: null, defaultStartDate: null, projectId })
+            const anchor = selectedTaskId && tasksByProject[projectId]?.some(t => t.id === selectedTaskId)
+              ? ganttRows.find(t => !t.isHeader && t.id === selectedTaskId)
+              : null
+            const defaultStart = anchor ? format(addDays(parseISO(anchor.end_date), 1), 'yyyy-MM-dd') : null
+            setTaskModal({ open: true, task: null, anchorTaskId: anchor?.id ?? null, defaultStartDate: defaultStart, projectId })
           }}
         />
       )}
