@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { addDays, differenceInDays, format, parseISO } from 'date-fns'
 import {
   getProjects, getTasks, updateTask,
@@ -25,6 +26,7 @@ function cascadeFrom(tasks, predId, predEnd) {
 }
 
 export default function ProjectView() {
+  const location = useLocation()
   const [projects, setProjects] = useState([])
   const [visibleProjectIds, setVisibleProjectIds] = useState(new Set())
   const [activeProjectId, setActiveProjectId] = useState(null)
@@ -47,6 +49,14 @@ export default function ProjectView() {
       if (ps.length > 0) setActiveProjectId(ps[0].id)
     })
   }, [])
+
+  // Focus a specific project when navigated here with state
+  useEffect(() => {
+    const focusId = location.state?.focusProjectId
+    if (!focusId || projects.length === 0) return
+    setVisibleProjectIds(new Set([focusId]))
+    setActiveProjectId(focusId)
+  }, [location.state, projects])
 
   // Load tasks when visible projects or refreshKey changes
   useEffect(() => {

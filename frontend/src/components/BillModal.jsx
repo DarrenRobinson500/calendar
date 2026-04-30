@@ -1,54 +1,48 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { createTodo, updateTodo, deleteTodo } from '../api.js'
+import { createBill, updateBill, deleteBill } from '../api.js'
 
 const today = format(new Date(), 'yyyy-MM-dd')
 
-export default function TodoModal({ todo, onSuccess, onClose }) {
-  const isEdit = Boolean(todo)
+export default function BillModal({ bill, onSuccess, onClose }) {
+  const isEdit = Boolean(bill)
   const [form, setForm] = useState({
-    name: todo?.name || '',
-    description: todo?.description || '',
-    frequency_days: todo?.frequency_days || '',
-    next_due: todo?.next_due || today,
-    one_off: todo?.one_off ?? false,
-    night_time: todo?.night_time ?? false,
+    name: bill?.name || '',
+    due_date: bill?.due_date || today,
+    amount: bill?.amount || '',
+    frequency_days: bill?.frequency_days || '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
-  const toggle = (field) => () => setForm((f) => ({ ...f, [field]: !f[field] }))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSaving(true)
     setError(null)
     try {
-      const payload = {
-        ...form,
-        frequency_days: form.one_off ? 1 : Number(form.frequency_days),
-      }
+      const payload = { ...form, frequency_days: Number(form.frequency_days), amount: Number(form.amount) }
       if (isEdit) {
-        await updateTodo(todo.id, payload)
+        await updateBill(bill.id, payload)
       } else {
-        await createTodo(payload)
+        await createBill(payload)
       }
       onSuccess()
     } catch {
-      setError('Failed to save todo.')
+      setError('Failed to save bill.')
       setSaving(false)
     }
   }
 
   const handleDelete = async () => {
-    if (!confirm('Delete this todo?')) return
+    if (!confirm('Delete this bill?')) return
     setSaving(true)
     try {
-      await deleteTodo(todo.id)
+      await deleteBill(bill.id)
       onSuccess()
     } catch {
-      setError('Failed to delete todo.')
+      setError('Failed to delete bill.')
       setSaving(false)
     }
   }
@@ -57,7 +51,7 @@ export default function TodoModal({ todo, onSuccess, onClose }) {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">{isEdit ? 'Edit To-Do' : 'New To-Do'}</h3>
+          <h3 className="text-lg font-semibold text-gray-800">{isEdit ? 'Edit Bill' : 'New Bill'}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
         </div>
 
@@ -74,57 +68,35 @@ export default function TodoModal({ todo, onSuccess, onClose }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-              rows={3}
-              value={form.description}
-              onChange={set('description')}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            />
-          </div>
-
-          <div className="flex gap-6">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={form.one_off}
-                onChange={toggle('one_off')}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600"
-              />
-              <span className="text-sm text-gray-700">One-off</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={form.night_time}
-                onChange={toggle('night_time')}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600"
-              />
-              <span className="text-sm text-gray-700">Night-time</span>
-            </label>
-          </div>
-
-          {!form.one_off && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Frequency (days)</label>
-              <input
-                type="number"
-                min="1"
-                required
-                value={form.frequency_days}
-                onChange={set('frequency_days')}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Next Due</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
             <input
               type="date"
               required
-              value={form.next_due}
-              onChange={set('next_due')}
+              value={form.due_date}
+              onChange={set('due_date')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Amount ($)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              required
+              value={form.amount}
+              onChange={set('amount')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Frequency (days)</label>
+            <input
+              type="number"
+              min="1"
+              required
+              value={form.frequency_days}
+              onChange={set('frequency_days')}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

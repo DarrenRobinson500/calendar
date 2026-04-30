@@ -19,4 +19,9 @@ urlpatterns = [
     path('tasks/<int:pk>/done/', views.task_done),
     path('tasks/bulk-update/', views.task_bulk_update),
     path('tasks/<int:pk>/', views.task_detail),
+    path('birthdays/', views.birthday_list),
+    path('birthdays/<int:pk>/', views.birthday_detail),
+    path('bills/', views.bill_list),
+    path('bills/<int:pk>/done/', views.bill_done),
+    path('bills/<int:pk>/', views.bill_detail),
 ]

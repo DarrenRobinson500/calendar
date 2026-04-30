@@ -34,3 +34,14 @@ export const bulkUpdateTasks = (tasks) => api.post('/tasks/bulk-update/', tasks)
 export const exportData = () => api.get('/data/export/')
 export const importData = (data, clear = false) =>
   api.post(`/data/import/${clear ? '?clear=true' : ''}`, data)
+
+export const getBirthdays = () => api.get('/birthdays/')
+export const createBirthday = (data) => api.post('/birthdays/', data)
+export const updateBirthday = (id, data) => api.put(`/birthdays/${id}/`, data)
+export const deleteBirthday = (id) => api.delete(`/birthdays/${id}/`)
+
+export const getBills = () => api.get('/bills/')
+export const createBill = (data) => api.post('/bills/', data)
+export const updateBill = (id, data) => api.put(`/bills/${id}/`, data)
+export const deleteBill = (id) => api.delete(`/bills/${id}/`)
+export const markBillDone = (id) => api.post(`/bills/${id}/done/`)

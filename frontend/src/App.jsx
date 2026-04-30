@@ -1,19 +1,28 @@
 import { useState, useCallback } from 'react'
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
+import TodayView from './components/TodayView.jsx'
 import CalendarView from './components/CalendarView.jsx'
 import TodoListView from './components/TodoListView.jsx'
+import BirthdayListView from './components/BirthdayListView.jsx'
+import BillListView from './components/BillListView.jsx'
 import DataView from './components/DataView.jsx'
 import ProjectView from './components/ProjectView.jsx'
 import EventModal from './components/EventModal.jsx'
 import TodoModal from './components/TodoModal.jsx'
+import BirthdayModal from './components/BirthdayModal.jsx'
+import BillModal from './components/BillModal.jsx'
 
 export default function App() {
   const location = useLocation()
 
   const [eventModal, setEventModal] = useState({ open: false, event: null, defaultDate: null })
   const [todoModal, setTodoModal] = useState({ open: false, todo: null })
+  const [birthdayModal, setBirthdayModal] = useState({ open: false, birthday: null })
+  const [billModal, setBillModal] = useState({ open: false, bill: null })
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0)
   const [todoRefreshKey, setTodoRefreshKey] = useState(0)
+  const [birthdayRefreshKey, setBirthdayRefreshKey] = useState(0)
+  const [billRefreshKey, setBillRefreshKey] = useState(0)
 
   const openEventCreate = useCallback((defaultDate) => {
     setEventModal({ open: true, event: null, defaultDate })
@@ -31,6 +40,22 @@ export default function App() {
     setTodoModal({ open: true, todo })
   }, [])
 
+  const openBirthdayCreate = useCallback(() => {
+    setBirthdayModal({ open: true, birthday: null })
+  }, [])
+
+  const openBirthdayEdit = useCallback((birthday) => {
+    setBirthdayModal({ open: true, birthday })
+  }, [])
+
+  const openBillCreate = useCallback(() => {
+    setBillModal({ open: true, bill: null })
+  }, [])
+
+  const openBillEdit = useCallback((bill) => {
+    setBillModal({ open: true, bill })
+  }, [])
+
   const handleEventSuccess = useCallback(() => {
     setEventModal({ open: false, event: null, defaultDate: null })
     setCalendarRefreshKey((k) => k + 1)
@@ -42,39 +67,60 @@ export default function App() {
     setTodoRefreshKey((k) => k + 1)
   }, [])
 
+  const handleBirthdaySuccess = useCallback(() => {
+    setBirthdayModal({ open: false, birthday: null })
+    setCalendarRefreshKey((k) => k + 1)
+    setBirthdayRefreshKey((k) => k + 1)
+  }, [])
+
+  const handleBillSuccess = useCallback(() => {
+    setBillModal({ open: false, bill: null })
+    setCalendarRefreshKey((k) => k + 1)
+    setBillRefreshKey((k) => k + 1)
+  }, [])
+
+  const navLink = (path, label) => (
+    <Link
+      to={path}
+      className={`text-sm font-medium ${location.pathname === path ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}
+    >
+      {label}
+    </Link>
+  )
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-6">
         <span className="font-semibold text-lg text-gray-800">CalApp</span>
+        {navLink('/today', 'Today')}
         <Link
           to="/calendar"
           className={`text-sm font-medium ${location.pathname.startsWith('/calendar') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}
         >
           Calendar
         </Link>
-        <Link
-          to="/todos"
-          className={`text-sm font-medium ${location.pathname === '/todos' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}
-        >
-          To-Dos
-        </Link>
-        <Link
-          to="/projects"
-          className={`text-sm font-medium ${location.pathname === '/projects' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}
-        >
-          Projects
-        </Link>
-        <Link
-          to="/data"
-          className={`text-sm font-medium ${location.pathname === '/data' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}
-        >
-          Data
-        </Link>
+        {navLink('/todos', 'To-Dos')}
+        {navLink('/birthdays', 'Birthdays')}
+        {navLink('/bills', 'Bills')}
+        {navLink('/projects', 'Projects')}
+        {navLink('/data', 'Data')}
       </nav>
 
       <main className="p-6">
         <Routes>
-          <Route path="/" element={<Navigate to="/calendar" replace />} />
+          <Route path="/" element={<Navigate to="/today" replace />} />
+          <Route
+            path="/today"
+            element={
+              <TodayView
+                refreshKey={calendarRefreshKey}
+                onEventEdit={openEventEdit}
+                onTodoEdit={openTodoEdit}
+                onBirthdayEdit={openBirthdayEdit}
+                onBillEdit={openBillEdit}
+              />
+            }
+          />
           <Route
             path="/calendar"
             element={
@@ -83,6 +129,8 @@ export default function App() {
                 onEventCreate={openEventCreate}
                 onEventEdit={openEventEdit}
                 onTodoEdit={openTodoEdit}
+                onBirthdayEdit={openBirthdayEdit}
+                onBillEdit={openBillEdit}
               />
             }
           />
@@ -93,6 +141,26 @@ export default function App() {
                 refreshKey={todoRefreshKey}
                 onTodoCreate={openTodoCreate}
                 onTodoEdit={openTodoEdit}
+              />
+            }
+          />
+          <Route
+            path="/birthdays"
+            element={
+              <BirthdayListView
+                refreshKey={birthdayRefreshKey}
+                onBirthdayCreate={openBirthdayCreate}
+                onBirthdayEdit={openBirthdayEdit}
+              />
+            }
+          />
+          <Route
+            path="/bills"
+            element={
+              <BillListView
+                refreshKey={billRefreshKey}
+                onBillCreate={openBillCreate}
+                onBillEdit={openBillEdit}
               />
             }
           />
@@ -115,6 +183,22 @@ export default function App() {
           todo={todoModal.todo}
           onSuccess={handleTodoSuccess}
           onClose={() => setTodoModal({ open: false, todo: null })}
+        />
+      )}
+
+      {birthdayModal.open && (
+        <BirthdayModal
+          birthday={birthdayModal.birthday}
+          onSuccess={handleBirthdaySuccess}
+          onClose={() => setBirthdayModal({ open: false, birthday: null })}
+        />
+      )}
+
+      {billModal.open && (
+        <BillModal
+          bill={billModal.bill}
+          onSuccess={handleBillSuccess}
+          onClose={() => setBillModal({ open: false, bill: null })}
         />
       )}
     </div>

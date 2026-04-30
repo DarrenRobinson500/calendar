@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Event, ToDo, Project, Task
-from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer
+from .models import Event, ToDo, Project, Task, Birthday, Bill
+from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BirthdaySerializer, BillSerializer
 
 
 @api_view(['GET'])
@@ -29,14 +29,28 @@ def calendar_view(request):
 
     events = Event.objects.filter(date__year=year, date__month=month)
     todos = ToDo.objects.filter(next_due__lte=last_day).order_by('order', 'id')
+    birthdays = Birthday.objects.filter(date__month=month)
+    bills = Bill.objects.filter(due_date__lte=last_day)
 
     days: dict = {}
 
     def ensure_day(d: date):
         key = d.isoformat()
         if key not in days:
-            days[key] = {'events': [], 'todos': []}
+            days[key] = {'events': [], 'todos': [], 'night_todos': [], 'birthdays': [], 'bills': []}
         return key
+
+    for birthday in birthdays:
+        try:
+            display_date = date(year, month, birthday.date.day)
+        except ValueError:
+            continue
+        key = ensure_day(display_date)
+        days[key]['birthdays'].append({
+            'id': birthday.id,
+            'name': birthday.name,
+            'date': birthday.date.isoformat(),
+        })
 
     for event in events:
         key = ensure_day(event.date)
@@ -51,12 +65,31 @@ def calendar_view(request):
         display_date = today if overdue else todo.next_due
         if first_day <= display_date <= last_day:
             key = ensure_day(display_date)
-            days[key]['todos'].append({
+            todo_data = {
                 'id': todo.id,
                 'name': todo.name,
                 'description': todo.description,
                 'frequency_days': todo.frequency_days,
                 'next_due': todo.next_due.isoformat(),
+                'overdue': overdue,
+                'one_off': todo.one_off,
+                'night_time': todo.night_time,
+            }
+            if todo.night_time:
+                days[key]['night_todos'].append(todo_data)
+            else:
+                days[key]['todos'].append(todo_data)
+
+    for bill in bills:
+        overdue = bill.due_date < today
+        display_date = today if overdue else bill.due_date
+        if first_day <= display_date <= last_day:
+            key = ensure_day(display_date)
+            days[key]['bills'].append({
+                'id': bill.id,
+                'name': bill.name,
+                'amount': str(bill.amount),
+                'due_date': bill.due_date.isoformat(),
                 'overdue': overdue,
             })
 
@@ -78,6 +111,7 @@ def calendar_view(request):
                 'id': task.id,
                 'name': task.name,
                 'project_name': task.project.name,
+                'project_id': task.project.id,
             })
             day += timedelta(days=1)
 
@@ -155,6 +189,10 @@ def todo_done(request, pk):
         todo = ToDo.objects.get(pk=pk)
     except ToDo.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if todo.one_off:
+        todo.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     todo.next_due = localdate() + timedelta(days=todo.frequency_days)
     todo.save()
@@ -367,3 +405,76 @@ def task_bulk_update(request):
             end_date=item['end_date'],
         )
     return Response({'status': 'ok'})
+
+
+# ── Birthdays ─────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def birthday_list(request):
+    if request.method == 'GET':
+        return Response(BirthdaySerializer(Birthday.objects.all(), many=True).data)
+    s = BirthdaySerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def birthday_detail(request, pk):
+    try:
+        birthday = Birthday.objects.get(pk=pk)
+    except Birthday.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'GET':
+        return Response(BirthdaySerializer(birthday).data)
+    if request.method == 'PUT':
+        s = BirthdaySerializer(birthday, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+    birthday.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Bills ─────────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def bill_list(request):
+    if request.method == 'GET':
+        return Response(BillSerializer(Bill.objects.all(), many=True).data)
+    s = BillSerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def bill_detail(request, pk):
+    try:
+        bill = Bill.objects.get(pk=pk)
+    except Bill.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'GET':
+        return Response(BillSerializer(bill).data)
+    if request.method == 'PUT':
+        s = BillSerializer(bill, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+    bill.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+def bill_done(request, pk):
+    try:
+        bill = Bill.objects.get(pk=pk)
+    except Bill.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    bill.due_date = localdate() + timedelta(days=bill.frequency_days)
+    bill.save()
+    return Response(BillSerializer(bill).data)
