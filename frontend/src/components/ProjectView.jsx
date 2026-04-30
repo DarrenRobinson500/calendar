@@ -345,7 +345,7 @@ export default function ProjectView() {
               {/* Activate / Deactivate */}
               <button
                 onClick={e => { e.stopPropagation(); handleToggleActive(p.id) }}
-                className={`text-xs px-2 py-0.5 rounded border shrink-0 ${p.active ? 'border-amber-300 text-amber-700 hover:bg-amber-50' : 'border-green-300 text-green-700 hover:bg-green-50'}`}
+                className={`text-xs px-2 py-0.5 rounded border shrink-0 ${p.active ? 'border-green-500 text-green-500 hover:bg-green-50' : 'border-grey-300 text-grey-700 hover:bg-grey-50'}`}
               >
                 {p.active ? 'Deactivate' : 'Activate'}
               </button>

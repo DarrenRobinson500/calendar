@@ -27,4 +27,5 @@ urlpatterns = [
     path('gratitude/', views.gratitude_list),
     path('gratitude/reorder/', views.gratitude_reorder),
     path('gratitude/<int:pk>/', views.gratitude_detail),
+    path('settings/', views.settings_view),
 ]

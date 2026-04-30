@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Event, ToDo, Project, Task, Birthday, Bill, Gratitude
+from .models import Event, ToDo, Project, Task, Birthday, Bill, Gratitude, Setting
 from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BirthdaySerializer, BillSerializer, GratitudeSerializer
 
 
@@ -97,6 +97,7 @@ def calendar_view(request):
         start_date__lte=last_day,
         end_date__gte=first_day,
         completed=False,
+        is_heading=False,
         project__active=True,
     ).select_related('project').order_by('project__name', 'order', 'id')
 
@@ -508,3 +509,14 @@ def gratitude_detail(request, pk):
         return Response(status=status.HTTP_404_NOT_FOUND)
     entry.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Settings ──────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def settings_view(request):
+    if request.method == 'GET':
+        return Response({s.key: s.value for s in Setting.objects.all()})
+    for key, value in request.data.items():
+        Setting.objects.update_or_create(key=key, defaults={'value': value})
+    return Response({'status': 'ok'})

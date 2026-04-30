@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
+import { getSettings, saveSettings } from '../api.js'
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -20,17 +21,34 @@ function ProgressBar({ percent, color }) {
 }
 
 export default function ClaudeView() {
-  const [start, setStart] = useState(() => localStorage.getItem('claude_start') || '')
-  const [percentUsed, setPercentUsed] = useState(() => localStorage.getItem('claude_percent') || '')
+  const [start, setStart] = useState('')
+  const [percentUsed, setPercentUsed] = useState('')
   const [now, setNow] = useState(new Date())
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
 
+  // Load from backend on mount
+  useEffect(() => {
+    getSettings().then((res) => {
+      setStart(res.data.claude_start || '')
+      setPercentUsed(res.data.claude_percent || '')
+      setSettingsLoaded(true)
+    })
+  }, [])
+
+  // Debounced save to backend
+  useEffect(() => {
+    if (!settingsLoaded) return
+    const timer = setTimeout(() => {
+      saveSettings({ claude_start: start, claude_percent: percentUsed })
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [start, percentUsed, settingsLoaded])
+
+  // Update now every minute
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 60000)
     return () => clearInterval(interval)
   }, [])
-
-  useEffect(() => { localStorage.setItem('claude_start', start) }, [start])
-  useEffect(() => { localStorage.setItem('claude_percent', percentUsed) }, [percentUsed])
 
   const startDate = start ? new Date(start) : null
   const elapsed = startDate ? now - startDate : null
@@ -64,7 +82,7 @@ export default function ClaudeView() {
             type="number"
             min="0"
             max="100"
-            step="0.1"
+            step="1"
             value={percentUsed}
             onChange={(e) => setPercentUsed(e.target.value)}
             placeholder="e.g. 42"

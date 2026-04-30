@@ -267,14 +267,6 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
           {/* SVG overlay for arrows */}
           <svg style={{ position: 'absolute', left: px(SIDEBAR_W), top: 0, width: px(TOTAL_DAYS * DAY_W), height: px(totalH), zIndex: 5, overflow: 'visible' }}
             onClick={() => setSelectedArrow(null)}>
-            <defs>
-              <marker id="arr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
-                <polygon points="0 0,7 2.5,0 5" fill="#6366f1" />
-              </marker>
-              <marker id="arr-red" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
-                <polygon points="0 0,7 2.5,0 5" fill="#ef4444" />
-              </marker>
-            </defs>
             {/* Live link drag line */}
             {linkDrag && (() => {
               const from = localTasks.find(t => t.id === linkDrag.fromId)
@@ -293,7 +285,7 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
                   onClick={(e) => { e.stopPropagation(); setSelectedArrow(sel ? null : { key: a.key, dependentId: a.dependentId }) }}
                 >
                   <path d={d} fill="none" stroke="transparent" strokeWidth={12} />
-                  <path d={d} fill="none" stroke={sel ? '#ef4444' : '#6366f1'} strokeWidth={1.5} markerEnd={sel ? 'url(#arr-red)' : 'url(#arr)'} />
+                  <path d={d} fill="none" stroke={sel ? '#ef4444' : '#6366f1'} strokeWidth={1.5} />
                 </g>
               )
             })}

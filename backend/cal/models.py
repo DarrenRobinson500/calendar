@@ -1,6 +1,14 @@
 from django.db import models
 
 
+class Setting(models.Model):
+    key = models.CharField(max_length=100, unique=True)
+    value = models.TextField()
+
+    def __str__(self):
+        return f"{self.key} = {self.value[:60]}"
+
+
 class Gratitude(models.Model):
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -78,13 +86,14 @@ class Task(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
     order = models.PositiveIntegerField(default=0)
     depends_on = models.ForeignKey(
         'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='dependents'
     )
     completed = models.BooleanField(default=False)
+    is_heading = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['order', 'id']

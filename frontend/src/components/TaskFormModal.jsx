@@ -14,8 +14,9 @@ export default function TaskFormModal({ task, projectId, defaultStartDate, onSuc
     name: task?.name || '',
     description: task?.description || '',
     start_date: task?.start_date || defaultStartDate || today,
-    duration: task ? durationFromDates(task.start_date, task.end_date) : 1,
+    duration: task && !task.is_heading ? durationFromDates(task.start_date, task.end_date) : 1,
     completed: task?.completed || false,
+    is_heading: task?.is_heading || false,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
