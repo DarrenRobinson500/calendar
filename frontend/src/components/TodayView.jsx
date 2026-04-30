@@ -42,17 +42,20 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBirthda
         <p className="text-gray-400 text-sm">Nothing scheduled.</p>
       ) : (
         <div className="space-y-2">
-          {birthdays.map((bd) => (
-            <ItemRow key={`bd-${bd.id}`} color="bg-yellow-100">
-              <button
-                onClick={() => onBirthdayEdit(bd)}
-                className="w-full text-left"
-              >
-                <p className="font-medium text-yellow-800">{bd.name}</p>
-                <p className="text-xs text-yellow-700 mt-0.5">{format(parseISO(bd.date), 'MMMM d, yyyy')}</p>
-              </button>
-            </ItemRow>
-          ))}
+          {birthdays.map((bd) => {
+            const age = new Date().getFullYear() - parseISO(bd.date).getFullYear()
+            return (
+              <ItemRow key={`bd-${bd.id}`} color="bg-yellow-100">
+                <button
+                  onClick={() => onBirthdayEdit(bd)}
+                  className="w-full text-left"
+                >
+                  <p className="font-medium text-yellow-800">{bd.name} ({age} yo)</p>
+                  <p className="text-xs text-yellow-700 mt-0.5">{format(parseISO(bd.date), 'MMMM d, yyyy')}</p>
+                </button>
+              </ItemRow>
+            )
+          })}
 
           {events.map((ev) => (
             <ItemRow key={`ev-${ev.id}`} color="bg-blue-100">

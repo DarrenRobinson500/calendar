@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react'
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
+import ClaudeView from './components/ClaudeView.jsx'
+import GratitudeView from './components/GratitudeView.jsx'
 import TodayView from './components/TodayView.jsx'
 import CalendarView from './components/CalendarView.jsx'
 import TodoListView from './components/TodoListView.jsx'
@@ -91,7 +93,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-6">
-        <span className="font-semibold text-lg text-gray-800">CalApp</span>
+        <span className="font-semibold text-lg text-gray-800">Calendar</span>
         {navLink('/today', 'Today')}
         <Link
           to="/calendar"
@@ -103,6 +105,8 @@ export default function App() {
         {navLink('/birthdays', 'Birthdays')}
         {navLink('/bills', 'Bills')}
         {navLink('/projects', 'Projects')}
+        {navLink('/claude', 'Claude')}
+        {navLink('/gratitude', 'Gratitude')}
         {navLink('/data', 'Data')}
       </nav>
 
@@ -164,6 +168,8 @@ export default function App() {
               />
             }
           />
+          <Route path="/claude" element={<ClaudeView />} />
+          <Route path="/gratitude" element={<GratitudeView />} />
           <Route path="/projects" element={<ProjectView />} />
           <Route path="/data" element={<DataView />} />
         </Routes>

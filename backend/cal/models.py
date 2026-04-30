@@ -1,6 +1,18 @@
 from django.db import models
 
 
+class Gratitude(models.Model):
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+
+    def __str__(self):
+        return self.text[:60]
+
+
 class Event(models.Model):
     title = models.CharField(max_length=255)
     date = models.DateField()

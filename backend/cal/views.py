@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Event, ToDo, Project, Task, Birthday, Bill
-from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BirthdaySerializer, BillSerializer
+from .models import Event, ToDo, Project, Task, Birthday, Bill, Gratitude
+from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BirthdaySerializer, BillSerializer, GratitudeSerializer
 
 
 @api_view(['GET'])
@@ -478,3 +478,33 @@ def bill_done(request, pk):
     bill.due_date = localdate() + timedelta(days=bill.frequency_days)
     bill.save()
     return Response(BillSerializer(bill).data)
+
+
+# ── Gratitude ─────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def gratitude_list(request):
+    if request.method == 'GET':
+        return Response(GratitudeSerializer(Gratitude.objects.all(), many=True).data)
+    s = GratitudeSerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def gratitude_reorder(request):
+    for position, entry_id in enumerate(request.data):
+        Gratitude.objects.filter(pk=entry_id).update(order=position)
+    return Response({'status': 'ok'})
+
+
+@api_view(['DELETE'])
+def gratitude_detail(request, pk):
+    try:
+        entry = Gratitude.objects.get(pk=pk)
+    except Gratitude.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    entry.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)

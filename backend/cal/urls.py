@@ -24,4 +24,7 @@ urlpatterns = [
     path('bills/', views.bill_list),
     path('bills/<int:pk>/done/', views.bill_done),
     path('bills/<int:pk>/', views.bill_detail),
+    path('gratitude/', views.gratitude_list),
+    path('gratitude/reorder/', views.gratitude_reorder),
+    path('gratitude/<int:pk>/', views.gratitude_detail),
 ]

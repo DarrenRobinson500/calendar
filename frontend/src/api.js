@@ -45,3 +45,8 @@ export const createBill = (data) => api.post('/bills/', data)
 export const updateBill = (id, data) => api.put(`/bills/${id}/`, data)
 export const deleteBill = (id) => api.delete(`/bills/${id}/`)
 export const markBillDone = (id) => api.post(`/bills/${id}/done/`)
+
+export const getGratitude = () => api.get('/gratitude/')
+export const createGratitude = (data) => api.post('/gratitude/', data)
+export const deleteGratitude = (id) => api.delete(`/gratitude/${id}/`)
+export const reorderGratitude = (orderedIds) => api.post('/gratitude/reorder/', orderedIds)

@@ -63,13 +63,15 @@ export default function BirthdayListView({ refreshKey, onBirthdayCreate, onBirth
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
-              {birthdays.map((bd) => (
+              {birthdays.map((bd) => {
+                const age = new Date().getFullYear() - parseISO(bd.date).getFullYear()
+                return (
                 <tr
                   key={bd.id}
                   onClick={() => onBirthdayEdit(bd)}
                   className="hover:bg-gray-50 cursor-pointer"
                 >
-                  <td className="px-4 py-2 font-medium text-gray-800">{bd.name}</td>
+                  <td className="px-4 py-2 font-medium text-gray-800">{bd.name} <span className="text-gray-400 font-normal">({age} yo)</span></td>
                   <td className="px-4 py-2 text-gray-600">
                     {format(parseISO(bd.date), 'MMM d, yyyy')}
                   </td>
@@ -82,7 +84,8 @@ export default function BirthdayListView({ refreshKey, onBirthdayCreate, onBirth
                     </button>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>

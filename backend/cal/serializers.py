@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Event, ToDo, Project, Task, Birthday, Bill
+from .models import Event, ToDo, Project, Task, Birthday, Bill, Gratitude
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -36,3 +36,9 @@ class BillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bill
         fields = ['id', 'name', 'due_date', 'amount', 'frequency_days']
+
+
+class GratitudeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Gratitude
+        fields = ['id', 'text', 'created_at', 'order']

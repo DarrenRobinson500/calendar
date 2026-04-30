@@ -121,15 +121,18 @@ export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, o
               </div>
 
               <div className="space-y-1">
-                {birthdays.map((bd) => (
-                  <button
-                    key={`bd-${bd.id}`}
-                    onClick={(e) => { e.stopPropagation(); onBirthdayEdit(bd) }}
-                    className="w-full text-left text-xs bg-yellow-100 text-yellow-800 rounded px-1 py-0.5 truncate hover:bg-yellow-200"
-                  >
-                    {bd.name}
-                  </button>
-                ))}
+                {birthdays.map((bd) => {
+                  const age = new Date().getFullYear() - parseISO(bd.date).getFullYear()
+                  return (
+                    <button
+                      key={`bd-${bd.id}`}
+                      onClick={(e) => { e.stopPropagation(); onBirthdayEdit(bd) }}
+                      className="w-full text-left text-xs bg-yellow-100 text-yellow-800 rounded px-1 py-0.5 truncate hover:bg-yellow-200"
+                    >
+                      {bd.name} ({age} yo)
+                    </button>
+                  )
+                })}
 
                 {events.map((ev) => (
                   <button
