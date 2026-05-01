@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Event, ToDo, Project, Task, Birthday, Bill, Gratitude
+from .models import Event, ToDo, Project, Task, Birthday, Bill, Gratitude, PeopleGroup, Person, Story, Tracker, TrackerEntry
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -42,3 +42,33 @@ class GratitudeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Gratitude
         fields = ['id', 'text', 'created_at', 'order']
+
+
+class PeopleGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PeopleGroup
+        fields = ['id', 'name', 'order']
+
+
+class PersonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Person
+        fields = ['id', 'group', 'name', 'notes', 'order']
+
+
+class StorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Story
+        fields = ['id', 'person', 'text', 'created_at']
+
+
+class TrackerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tracker
+        fields = ['id', 'name', 'unit', 'order']
+
+
+class TrackerEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrackerEntry
+        fields = ['id', 'tracker', 'date', 'value']

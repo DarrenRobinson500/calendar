@@ -9,6 +9,8 @@ import BirthdayListView from './components/BirthdayListView.jsx'
 import BillListView from './components/BillListView.jsx'
 import DataView from './components/DataView.jsx'
 import ProjectView from './components/ProjectView.jsx'
+import PeopleView from './components/PeopleView.jsx'
+import TrackerView from './components/TrackerView.jsx'
 import EventModal from './components/EventModal.jsx'
 import TodoModal from './components/TodoModal.jsx'
 import BirthdayModal from './components/BirthdayModal.jsx'
@@ -105,9 +107,11 @@ export default function App() {
         {navLink('/birthdays', 'Birthdays')}
         {navLink('/bills', 'Bills')}
         {navLink('/projects', 'Projects')}
+        {navLink('/people', 'People')}
         {navLink('/claude', 'Claude')}
         {navLink('/gratitude', 'Gratitude')}
         {navLink('/data', 'Data')}
+        {navLink('/tracker', 'Tracker')}
       </nav>
 
       <main className="p-6">
@@ -168,6 +172,8 @@ export default function App() {
               />
             }
           />
+          <Route path="/people" element={<PeopleView />} />
+          <Route path="/tracker" element={<TrackerView />} />
           <Route path="/claude" element={<ClaudeView />} />
           <Route path="/gratitude" element={<GratitudeView />} />
           <Route path="/projects" element={<ProjectView />} />

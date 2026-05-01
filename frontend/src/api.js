@@ -53,3 +53,28 @@ export const reorderGratitude = (orderedIds) => api.post('/gratitude/reorder/', 
 
 export const getSettings = () => api.get('/settings/')
 export const saveSettings = (data) => api.post('/settings/', data)
+
+export const getPeopleGroups = () => api.get('/people-groups/')
+export const createPeopleGroup = (data) => api.post('/people-groups/', data)
+export const updatePeopleGroup = (id, data) => api.put(`/people-groups/${id}/`, data)
+export const deletePeopleGroup = (id) => api.delete(`/people-groups/${id}/`)
+export const reorderPeopleGroups = (orderedIds) => api.post('/people-groups/reorder/', orderedIds)
+
+export const getPeople = (groupId) => api.get(`/people/?group=${groupId}`)
+export const createPerson = (data) => api.post('/people/', data)
+export const updatePerson = (id, data) => api.put(`/people/${id}/`, data)
+export const deletePerson = (id) => api.delete(`/people/${id}/`)
+
+export const getStories = (personId) => api.get(`/stories/?person=${personId}`)
+export const createStory = (data) => api.post('/stories/', data)
+export const deleteStory = (id) => api.delete(`/stories/${id}/`)
+
+export const getTrackers = () => api.get('/trackers/')
+export const createTracker = (data) => api.post('/trackers/', data)
+export const updateTracker = (id, data) => api.put(`/trackers/${id}/`, data)
+export const deleteTracker = (id) => api.delete(`/trackers/${id}/`)
+export const reorderTrackers = (orderedIds) => api.post('/trackers/reorder/', orderedIds)
+
+export const getTrackerEntries = (trackerId) => api.get(`/tracker-entries/?tracker=${trackerId}`)
+export const upsertTrackerEntry = (data) => api.post('/tracker-entries/', data)
+export const deleteTrackerEntry = (id) => api.delete(`/tracker-entries/${id}/`)

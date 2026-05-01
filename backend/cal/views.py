@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Event, ToDo, Project, Task, Birthday, Bill, Gratitude, Setting
-from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BirthdaySerializer, BillSerializer, GratitudeSerializer
+from .models import Event, ToDo, Project, Task, Birthday, Bill, Gratitude, Setting, PeopleGroup, Person, Story, Tracker, TrackerEntry
+from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BirthdaySerializer, BillSerializer, GratitudeSerializer, PeopleGroupSerializer, PersonSerializer, StorySerializer, TrackerSerializer, TrackerEntrySerializer
 
 
 @api_view(['GET'])
@@ -520,3 +520,168 @@ def settings_view(request):
     for key, value in request.data.items():
         Setting.objects.update_or_create(key=key, defaults={'value': value})
     return Response({'status': 'ok'})
+
+
+# ── People Groups ─────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def people_group_list(request):
+    if request.method == 'GET':
+        return Response(PeopleGroupSerializer(PeopleGroup.objects.all(), many=True).data)
+    s = PeopleGroupSerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def people_group_detail(request, pk):
+    try:
+        group = PeopleGroup.objects.get(pk=pk)
+    except PeopleGroup.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'GET':
+        return Response(PeopleGroupSerializer(group).data)
+    if request.method == 'PUT':
+        s = PeopleGroupSerializer(group, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+    group.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+def people_group_reorder(request):
+    for position, group_id in enumerate(request.data):
+        PeopleGroup.objects.filter(pk=group_id).update(order=position)
+    return Response({'status': 'ok'})
+
+
+# ── People ────────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def person_list(request):
+    if request.method == 'GET':
+        group_id = request.query_params.get('group')
+        qs = Person.objects.filter(group_id=group_id) if group_id else Person.objects.all()
+        return Response(PersonSerializer(qs, many=True).data)
+    s = PersonSerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def person_detail(request, pk):
+    try:
+        person = Person.objects.get(pk=pk)
+    except Person.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'GET':
+        return Response(PersonSerializer(person).data)
+    if request.method == 'PUT':
+        s = PersonSerializer(person, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+    person.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Stories ───────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def story_list(request):
+    if request.method == 'GET':
+        person_id = request.query_params.get('person')
+        qs = Story.objects.filter(person_id=person_id) if person_id else Story.objects.all()
+        return Response(StorySerializer(qs, many=True).data)
+    s = StorySerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+def story_detail(request, pk):
+    try:
+        story = Story.objects.get(pk=pk)
+    except Story.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    story.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Trackers ──────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def tracker_list(request):
+    if request.method == 'GET':
+        return Response(TrackerSerializer(Tracker.objects.all(), many=True).data)
+    s = TrackerSerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def tracker_detail(request, pk):
+    try:
+        tracker = Tracker.objects.get(pk=pk)
+    except Tracker.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'GET':
+        return Response(TrackerSerializer(tracker).data)
+    if request.method == 'PUT':
+        s = TrackerSerializer(tracker, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+    tracker.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+def tracker_reorder(request):
+    for position, tracker_id in enumerate(request.data):
+        Tracker.objects.filter(pk=tracker_id).update(order=position)
+    return Response({'status': 'ok'})
+
+
+# ── Tracker Entries ───────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def tracker_entry_list(request):
+    if request.method == 'GET':
+        tracker_id = request.query_params.get('tracker')
+        qs = TrackerEntry.objects.filter(tracker_id=tracker_id) if tracker_id else TrackerEntry.objects.all()
+        return Response(TrackerEntrySerializer(qs, many=True).data)
+    tracker_id = request.data.get('tracker')
+    date = request.data.get('date')
+    value = request.data.get('value')
+    if not tracker_id or not date or value is None:
+        return Response({'error': 'tracker, date and value are required.'}, status=status.HTTP_400_BAD_REQUEST)
+    entry, _ = TrackerEntry.objects.update_or_create(
+        tracker_id=tracker_id,
+        date=date,
+        defaults={'value': value},
+    )
+    return Response(TrackerEntrySerializer(entry).data)
+
+
+@api_view(['DELETE'])
+def tracker_entry_detail(request, pk):
+    try:
+        entry = TrackerEntry.objects.get(pk=pk)
+    except TrackerEntry.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    entry.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)

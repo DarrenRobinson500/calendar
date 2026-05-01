@@ -100,3 +100,64 @@ class Task(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.project.name})"
+
+
+class PeopleGroup(models.Model):
+    name = models.CharField(max_length=255)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.name
+
+
+class Person(models.Model):
+    group = models.ForeignKey(PeopleGroup, on_delete=models.CASCADE, related_name='people')
+    name = models.CharField(max_length=255)
+    notes = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.group.name})"
+
+
+class Story(models.Model):
+    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='stories')
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.person.name}: {self.text[:60]}"
+
+
+class Tracker(models.Model):
+    name = models.CharField(max_length=255)
+    unit = models.CharField(max_length=50, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.name
+
+
+class TrackerEntry(models.Model):
+    tracker = models.ForeignKey(Tracker, on_delete=models.CASCADE, related_name='entries')
+    date = models.DateField()
+    value = models.DecimalField(max_digits=12, decimal_places=4)
+
+    class Meta:
+        ordering = ['date']
+        unique_together = [['tracker', 'date']]
+
+    def __str__(self):
+        return f"{self.tracker.name} {self.date}: {self.value}"
