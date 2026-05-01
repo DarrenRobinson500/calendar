@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { format, parseISO } from 'date-fns'
 import {
   getPeopleGroups, createPeopleGroup, updatePeopleGroup, deletePeopleGroup, reorderPeopleGroups,
-  getPeople, createPerson, updatePerson, deletePerson,
+  getPeople, createPerson, updatePerson, deletePerson, reorderPeople,
   getStories, createStory, deleteStory,
 } from '../api.js'
 
@@ -131,6 +131,7 @@ export default function PeopleView() {
   const [people, setPeople] = useState([])
   const [selectedPersonId, setSelectedPersonId] = useState(null)
   const [stories, setStories] = useState([])
+  const [storyHeading, setStoryHeading] = useState('')
   const [storyText, setStoryText] = useState('')
   const [loadingGroups, setLoadingGroups] = useState(true)
   const [loadingPeople, setLoadingPeople] = useState(false)
@@ -143,6 +144,10 @@ export default function PeopleView() {
   // drag state for groups
   const dragGroupIdx = useRef(null)
   const [dragGroupOver, setDragGroupOver] = useState(null)
+
+  // drag state for people
+  const dragPersonIdx = useRef(null)
+  const [dragPersonOver, setDragPersonOver] = useState(null)
 
   useEffect(() => {
     getPeopleGroups()
@@ -192,11 +197,12 @@ export default function PeopleView() {
 
   const handleAddStory = async (e) => {
     e.preventDefault()
-    if (!storyText.trim() || !selectedPersonId) return
+    if (!storyHeading.trim() || !selectedPersonId) return
     setSavingStory(true)
     try {
-      const res = await createStory({ person: selectedPersonId, text: storyText.trim() })
+      const res = await createStory({ person: selectedPersonId, heading: storyHeading.trim(), text: storyText.trim() })
       setStories((s) => [res.data, ...s])
+      setStoryHeading('')
       setStoryText('')
       storyRef.current?.focus()
     } finally {
@@ -228,6 +234,22 @@ export default function PeopleView() {
     dragGroupIdx.current = null
     setGroups(reordered)
     await reorderPeopleGroups(reordered.map((g) => g.id))
+  }
+
+  // people drag-to-reorder
+  const handlePersonDragStart = (idx) => { dragPersonIdx.current = idx }
+  const handlePersonDragOver = (e, idx) => { e.preventDefault(); setDragPersonOver(idx) }
+  const handlePersonDragEnd = () => { dragPersonIdx.current = null; setDragPersonOver(null) }
+  const handlePersonDrop = async (targetIdx) => {
+    const from = dragPersonIdx.current
+    setDragPersonOver(null)
+    if (from === null || from === targetIdx) return
+    const reordered = [...people]
+    const [moved] = reordered.splice(from, 1)
+    reordered.splice(targetIdx, 0, moved)
+    dragPersonIdx.current = null
+    setPeople(reordered)
+    await reorderPeople(reordered.map((p) => p.id))
   }
 
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) ?? null
@@ -305,12 +327,21 @@ export default function PeopleView() {
           <p className="text-xs text-gray-400 px-4 py-3">No people yet.</p>
         ) : (
           <ul>
-            {people.map((person) => (
+            {people.map((person, idx) => (
               <li
                 key={person.id}
-                className={`flex items-center gap-1 px-3 py-2 cursor-pointer group border-b border-gray-50 last:border-0 ${selectedPersonId === person.id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                draggable
+                onDragStart={() => handlePersonDragStart(idx)}
+                onDragOver={(e) => handlePersonDragOver(e, idx)}
+                onDragEnd={handlePersonDragEnd}
+                onDrop={() => handlePersonDrop(idx)}
+                className={`relative flex items-center gap-1 px-2 py-2 cursor-pointer group border-b border-gray-50 last:border-0 ${selectedPersonId === person.id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
                 onClick={() => setSelectedPersonId(person.id)}
               >
+                {dragPersonOver === idx && dragPersonIdx.current !== idx && (
+                  <div className="absolute -top-px left-0 right-0 h-0.5 bg-blue-500 pointer-events-none" />
+                )}
+                <span className="text-gray-300 hover:text-gray-400 cursor-grab active:cursor-grabbing select-none text-xs shrink-0" title="Drag to reorder">⠿</span>
                 <span className={`flex-1 text-sm truncate ${selectedPersonId === person.id ? 'text-blue-700 font-medium' : 'text-gray-700'}`}>{person.name}</span>
                 <button
                   onClick={(e) => { e.stopPropagation(); setPersonModal({ open: true, person }) }}
@@ -343,21 +374,29 @@ export default function PeopleView() {
           <p className="text-xs text-gray-400 px-5 py-4">Select a person to see their stories.</p>
         ) : (
           <div className="p-5">
-            <form onSubmit={handleAddStory} className="mb-6">
+            <form onSubmit={handleAddStory} className="mb-6 space-y-2">
+              <input
+                type="text"
+                value={storyHeading}
+                onChange={(e) => setStoryHeading(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); storyRef.current?.focus() } }}
+                placeholder="Heading"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
               <textarea
                 ref={storyRef}
                 rows={3}
                 value={storyText}
                 onChange={(e) => setStoryText(e.target.value)}
                 onKeyDown={handleStoryKeyDown}
-                placeholder="Add a story…"
+                placeholder="Story…"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
-              <div className="flex items-center justify-between mt-2">
-                <p className="text-xs text-gray-400">Enter to submit · Shift+Enter for new line</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-400">Enter in story to submit · Shift+Enter for new line</p>
                 <button
                   type="submit"
-                  disabled={savingStory || !storyText.trim()}
+                  disabled={savingStory || !storyHeading.trim()}
                   className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
                   {savingStory ? 'Saving…' : 'Add'}
@@ -374,7 +413,8 @@ export default function PeopleView() {
                 {stories.map((story) => (
                   <li key={story.id} className="relative bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 flex items-start gap-3 group">
                     <div className="flex-1 min-w-0">
-                      <p className="text-gray-800 text-sm whitespace-pre-wrap">{story.text}</p>
+                      {story.heading && <p className="text-gray-800 text-sm font-semibold mb-1">{story.heading}</p>}
+                      {story.text && <p className="text-gray-700 text-sm whitespace-pre-wrap">{story.text}</p>}
                       <p className="text-xs text-gray-400 mt-1">{format(parseISO(story.created_at), 'EEE d MMM yyyy, h:mm a')}</p>
                     </div>
                     <button

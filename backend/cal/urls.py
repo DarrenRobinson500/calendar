@@ -32,6 +32,7 @@ urlpatterns = [
     path('people-groups/reorder/', views.people_group_reorder),
     path('people-groups/<int:pk>/', views.people_group_detail),
     path('people/', views.person_list),
+    path('people/reorder/', views.person_reorder),
     path('people/<int:pk>/', views.person_detail),
     path('stories/', views.story_list),
     path('stories/<int:pk>/', views.story_detail),

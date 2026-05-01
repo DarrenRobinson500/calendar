@@ -59,13 +59,13 @@ class PersonSerializer(serializers.ModelSerializer):
 class StorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Story
-        fields = ['id', 'person', 'text', 'created_at']
+        fields = ['id', 'person', 'heading', 'text', 'created_at']
 
 
 class TrackerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tracker
-        fields = ['id', 'name', 'unit', 'order']
+        fields = ['id', 'name', 'unit', 'order', 'target_start_date', 'target_end_date', 'target_start_value', 'target_end_value']
 
 
 class TrackerEntrySerializer(serializers.ModelSerializer):

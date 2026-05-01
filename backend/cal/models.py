@@ -128,6 +128,7 @@ class Person(models.Model):
 
 class Story(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='stories')
+    heading = models.CharField(max_length=255, blank=True)
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -142,6 +143,10 @@ class Tracker(models.Model):
     name = models.CharField(max_length=255)
     unit = models.CharField(max_length=50, blank=True)
     order = models.PositiveIntegerField(default=0)
+    target_start_date = models.DateField(null=True, blank=True)
+    target_end_date = models.DateField(null=True, blank=True)
+    target_start_value = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True)
+    target_end_value = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True)
 
     class Meta:
         ordering = ['order', 'name']

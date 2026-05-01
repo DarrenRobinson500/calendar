@@ -30,8 +30,13 @@ function fmt(v) {
   return parseFloat(v.toFixed(3)).toString()
 }
 
-function TrackerChart({ entries, unit }) {
-  if (!entries.length) {
+function TrackerChart({ entries, unit, tracker }) {
+  const hasTarget = !!(
+    tracker?.target_start_date && tracker?.target_end_date &&
+    tracker?.target_start_value != null && tracker?.target_end_value != null
+  )
+
+  if (!entries.length && !hasTarget) {
     return <p className="text-xs text-gray-400 py-6 text-center">Record at least one value to see the chart.</p>
   }
 
@@ -40,23 +45,44 @@ function TrackerChart({ entries, unit }) {
   const ph = H - T - B
   const bot = T + ph
 
+  // x-axis: true date scale spanning entries + target dates
+  const timestamps = entries.map(e => parseISO(e.date).getTime())
+  if (hasTarget) {
+    timestamps.push(parseISO(tracker.target_start_date).getTime())
+    timestamps.push(parseISO(tracker.target_end_date).getTime())
+  }
+  const minTs = Math.min(...timestamps)
+  const maxTs = Math.max(...timestamps)
+  const tsRange = maxTs - minTs
+  const xOf = dateStr => tsRange === 0 ? L + pw / 2 : L + (parseISO(dateStr).getTime() - minTs) / tsRange * pw
+
+  // y-axis: span all entry values + target values
   const vals = entries.map(e => parseFloat(e.value))
+  if (hasTarget) {
+    vals.push(parseFloat(tracker.target_start_value))
+    vals.push(parseFloat(tracker.target_end_value))
+  }
   let lo = Math.min(...vals), hi = Math.max(...vals)
   if (lo === hi) { lo -= 1; hi += 1 }
   const vRange = hi - lo
   lo -= vRange * 0.1
   hi += vRange * 0.1
-
-  const xOf = i => entries.length === 1 ? L + pw / 2 : L + (i / (entries.length - 1)) * pw
   const yOf = v => T + (1 - (v - lo) / (hi - lo)) * ph
 
   const ticks = niceTicks(lo, hi)
   const labelEvery = Math.max(1, Math.ceil(entries.length / 8))
 
-  const pts = entries.map((e, i) => `${xOf(i).toFixed(1)},${yOf(parseFloat(e.value)).toFixed(1)}`).join(' ')
+  // entry geometry
+  const pts = entries.map(e => `${xOf(e.date).toFixed(1)},${yOf(parseFloat(e.value)).toFixed(1)}`).join(' ')
   const areaD = entries.length >= 2
-    ? `M ${xOf(0).toFixed(1)},${bot.toFixed(1)} L ${pts} L ${xOf(entries.length - 1).toFixed(1)},${bot.toFixed(1)} Z`
+    ? `M ${xOf(entries[0].date).toFixed(1)},${bot.toFixed(1)} L ${pts} L ${xOf(entries[entries.length - 1].date).toFixed(1)},${bot.toFixed(1)} Z`
     : null
+
+  // target geometry
+  const tx1 = hasTarget ? xOf(tracker.target_start_date) : 0
+  const ty1 = hasTarget ? yOf(parseFloat(tracker.target_start_value)) : 0
+  const tx2 = hasTarget ? xOf(tracker.target_end_date) : 0
+  const ty2 = hasTarget ? yOf(parseFloat(tracker.target_end_value)) : 0
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" className="block overflow-visible">
@@ -66,16 +92,32 @@ function TrackerChart({ entries, unit }) {
       ))}
       {/* area fill */}
       {areaD && <path d={areaD} fill="#3b82f6" fillOpacity={0.07} />}
-      {/* line */}
+      {/* data line */}
       {entries.length >= 2 && (
         <polyline points={pts} fill="none" stroke="#3b82f6" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
       )}
-      {/* dots */}
-      {entries.map((e, i) => (
-        <circle key={e.id} cx={xOf(i).toFixed(1)} cy={yOf(parseFloat(e.value)).toFixed(1)} r={4} fill="#3b82f6" stroke="white" strokeWidth={2}>
+      {/* target line */}
+      {hasTarget && (
+        <line x1={tx1.toFixed(1)} y1={ty1.toFixed(1)} x2={tx2.toFixed(1)} y2={ty2.toFixed(1)}
+          stroke="#eab308" strokeWidth={2} strokeDasharray="6 3" strokeLinecap="round" />
+      )}
+      {/* data dots */}
+      {entries.map(e => (
+        <circle key={e.id} cx={xOf(e.date).toFixed(1)} cy={yOf(parseFloat(e.value)).toFixed(1)} r={4} fill="#3b82f6" stroke="white" strokeWidth={2}>
           <title>{format(parseISO(e.date), 'd MMM yyyy')}: {parseFloat(e.value)}{unit ? ' ' + unit : ''}</title>
         </circle>
       ))}
+      {/* target endpoint dots */}
+      {hasTarget && (
+        <>
+          <circle cx={tx1.toFixed(1)} cy={ty1.toFixed(1)} r={4} fill="#eab308" stroke="white" strokeWidth={2}>
+            <title>Target start ({format(parseISO(tracker.target_start_date), 'd MMM yyyy')}): {parseFloat(tracker.target_start_value)}{unit ? ' ' + unit : ''}</title>
+          </circle>
+          <circle cx={tx2.toFixed(1)} cy={ty2.toFixed(1)} r={4} fill="#eab308" stroke="white" strokeWidth={2}>
+            <title>Target end ({format(parseISO(tracker.target_end_date), 'd MMM yyyy')}): {parseFloat(tracker.target_end_value)}{unit ? ' ' + unit : ''}</title>
+          </circle>
+        </>
+      )}
       {/* axes */}
       <line x1={L} x2={L} y1={T} y2={bot} stroke="#e5e7eb" strokeWidth={1} />
       <line x1={L} x2={L + pw} y1={bot} y2={bot} stroke="#e5e7eb" strokeWidth={1} />
@@ -85,10 +127,10 @@ function TrackerChart({ entries, unit }) {
           {fmt(t)}
         </text>
       ))}
-      {/* x-axis labels */}
+      {/* x-axis labels at entry positions */}
       {entries.map((e, i) => (
         (i % labelEvery === 0 || i === entries.length - 1) ? (
-          <text key={e.id} x={xOf(i).toFixed(1)} y={bot + 18} textAnchor="middle" fontSize={11} fill="#9ca3af">
+          <text key={e.id} x={xOf(e.date).toFixed(1)} y={bot + 18} textAnchor="middle" fontSize={11} fill="#9ca3af">
             {format(parseISO(e.date), 'd MMM')}
           </text>
         ) : null
@@ -98,7 +140,14 @@ function TrackerChart({ entries, unit }) {
 }
 
 function TrackerModal({ tracker, onSuccess, onClose }) {
-  const [form, setForm] = useState({ name: tracker?.name ?? '', unit: tracker?.unit ?? '' })
+  const [form, setForm] = useState({
+    name: tracker?.name ?? '',
+    unit: tracker?.unit ?? '',
+    target_start_date: tracker?.target_start_date ?? '',
+    target_end_date: tracker?.target_end_date ?? '',
+    target_start_value: tracker?.target_start_value != null ? String(parseFloat(tracker.target_start_value)) : '',
+    target_end_value: tracker?.target_end_value != null ? String(parseFloat(tracker.target_end_value)) : '',
+  })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const set = f => e => setForm(p => ({ ...p, [f]: e.target.value }))
@@ -107,11 +156,20 @@ function TrackerModal({ tracker, onSuccess, onClose }) {
     e.preventDefault()
     if (!form.name.trim()) return
     setSaving(true)
+    const payload = {
+      name: form.name.trim(),
+      unit: form.unit,
+      order: tracker?.order ?? 0,
+      target_start_date: form.target_start_date || null,
+      target_end_date: form.target_end_date || null,
+      target_start_value: form.target_start_value !== '' ? parseFloat(form.target_start_value) : null,
+      target_end_value: form.target_end_value !== '' ? parseFloat(form.target_end_value) : null,
+    }
     try {
       if (tracker) {
-        await updateTracker(tracker.id, { name: form.name.trim(), unit: form.unit, order: tracker.order })
+        await updateTracker(tracker.id, payload)
       } else {
-        await createTracker({ name: form.name.trim(), unit: form.unit, order: 0 })
+        await createTracker(payload)
       }
       onSuccess()
     } catch {
@@ -120,37 +178,52 @@ function TrackerModal({ tracker, onSuccess, onClose }) {
     }
   }
 
+  const fieldCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-gray-800">{tracker ? 'Edit Tracker' : 'New Tracker'}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
         </div>
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            autoFocus
-            type="text"
-            value={form.name}
-            onChange={set('name')}
-            placeholder="Name (e.g. Weight, Steps, Sleep)"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            value={form.unit}
-            onChange={set('unit')}
-            placeholder="Unit — optional (e.g. kg, hrs, %)"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <input autoFocus type="text" value={form.name} onChange={set('name')}
+            placeholder="Name (e.g. Weight, Steps, Sleep)" className={fieldCls} />
+          <input type="text" value={form.unit} onChange={set('unit')}
+            placeholder="Unit — optional (e.g. kg, hrs, %)" className={fieldCls} />
+
+          <div className="border-t border-gray-100 pt-3">
+            <p className="text-xs font-medium text-gray-500 mb-2">
+              Target <span className="font-normal text-gray-400">(optional — draws a yellow guide line on the chart)</span>
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Start date</label>
+                <input type="date" value={form.target_start_date} onChange={set('target_start_date')} className={fieldCls} />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Start value</label>
+                <input type="number" step="any" value={form.target_start_value} onChange={set('target_start_value')}
+                  placeholder="0" className={fieldCls} />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">End date</label>
+                <input type="date" value={form.target_end_date} onChange={set('target_end_date')} className={fieldCls} />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">End value</label>
+                <input type="number" step="any" value={form.target_end_value} onChange={set('target_end_value')}
+                  placeholder="0" className={fieldCls} />
+              </div>
+            </div>
+          </div>
+
           <div className="flex justify-end gap-2 pt-1">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-            <button
-              type="submit"
-              disabled={saving || !form.name.trim()}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
+            <button type="submit" disabled={saving || !form.name.trim()}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
               {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
@@ -357,7 +430,7 @@ export default function TrackerView() {
               {loadingEntries ? (
                 <p className="text-xs text-gray-400">Loading…</p>
               ) : (
-                <TrackerChart entries={chartEntries} unit={selected.unit} />
+                <TrackerChart entries={chartEntries} unit={selected.unit} tracker={selected} />
               )}
             </div>
 

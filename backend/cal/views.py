@@ -595,6 +595,13 @@ def person_detail(request, pk):
 
 # ── Stories ───────────────────────────────────────────────────────────────────
 
+@api_view(['POST'])
+def person_reorder(request):
+    for position, person_id in enumerate(request.data):
+        Person.objects.filter(pk=person_id).update(order=position)
+    return Response({'status': 'ok'})
+
+
 @api_view(['GET', 'POST'])
 def story_list(request):
     if request.method == 'GET':

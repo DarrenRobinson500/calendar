@@ -64,6 +64,7 @@ export const getPeople = (groupId) => api.get(`/people/?group=${groupId}`)
 export const createPerson = (data) => api.post('/people/', data)
 export const updatePerson = (id, data) => api.put(`/people/${id}/`, data)
 export const deletePerson = (id) => api.delete(`/people/${id}/`)
+export const reorderPeople = (orderedIds) => api.post('/people/reorder/', orderedIds)
 
 export const getStories = (personId) => api.get(`/stories/?person=${personId}`)
 export const createStory = (data) => api.post('/stories/', data)
