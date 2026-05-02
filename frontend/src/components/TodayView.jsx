@@ -15,7 +15,7 @@ function ItemRow({ color, children, onDoubleClick, title }) {
   )
 }
 
-function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBirthdayEdit, onBillEdit, refetch }) {
+function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBillEdit, refetch }) {
   const navigate = useNavigate()
   const birthdays = dayData?.birthdays || []
   const events = dayData?.events || []
@@ -46,13 +46,8 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBirthda
             const age = new Date().getFullYear() - parseISO(bd.date).getFullYear()
             return (
               <ItemRow key={`bd-${bd.id}`} color="bg-yellow-100">
-                <button
-                  onClick={() => onBirthdayEdit(bd)}
-                  className="w-full text-left"
-                >
-                  <p className="font-medium text-yellow-800">{bd.name} ({age} yo)</p>
-                  <p className="text-xs text-yellow-700 mt-0.5">{format(parseISO(bd.date), 'MMMM d, yyyy')}</p>
-                </button>
+                <p className="font-medium text-yellow-800">{bd.name} ({age} yo)</p>
+                <p className="text-xs text-yellow-700 mt-0.5">{format(parseISO(bd.date), 'MMMM d, yyyy')}</p>
               </ItemRow>
             )
           })}
@@ -152,7 +147,7 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBirthda
   )
 }
 
-export default function TodayView({ refreshKey, onEventEdit, onTodoEdit, onBirthdayEdit, onBillEdit }) {
+export default function TodayView({ refreshKey, onEventEdit, onTodoEdit, onBillEdit }) {
   const [days, setDays] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -190,7 +185,7 @@ export default function TodayView({ refreshKey, onEventEdit, onTodoEdit, onBirth
 
   const refetch = useCallback(() => setFetchKey((k) => k + 1), [])
 
-  const sharedProps = { onEventEdit, onTodoEdit, onBirthdayEdit, onBillEdit, refetch }
+  const sharedProps = { onEventEdit, onTodoEdit, onBillEdit, refetch }
 
   return (
     <div className="max-w-5xl mx-auto">

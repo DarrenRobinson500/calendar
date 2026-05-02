@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Event, ToDo, Project, Task, Birthday, Bill, Gratitude, PeopleGroup, Person, Story, Tracker, TrackerEntry
+from .models import Event, ToDo, Project, Task, Bill, Gratitude, PeopleGroup, Person, Story, Tracker, TrackerEntry
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -26,12 +26,6 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = ['id', 'project', 'name', 'description', 'start_date', 'end_date', 'order', 'depends_on', 'completed', 'is_heading']
 
 
-class BirthdaySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Birthday
-        fields = ['id', 'name', 'date']
-
-
 class BillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bill
@@ -53,7 +47,7 @@ class PeopleGroupSerializer(serializers.ModelSerializer):
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Person
-        fields = ['id', 'group', 'name', 'notes', 'order']
+        fields = ['id', 'group', 'name', 'notes', 'birthday', 'order']
 
 
 class StorySerializer(serializers.ModelSerializer):

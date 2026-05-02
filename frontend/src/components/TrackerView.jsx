@@ -56,6 +56,23 @@ function TrackerChart({ entries, unit, tracker }) {
   const tsRange = maxTs - minTs
   const xOf = dateStr => tsRange === 0 ? L + pw / 2 : L + (parseISO(dateStr).getTime() - minTs) / tsRange * pw
 
+  // weekly x-axis ticks (Mondays)
+  const msPerDay = 24 * 60 * 60 * 1000
+  const ONE_WEEK_MS = 7 * msPerDay
+  const xDateTicks = (() => {
+    if (tsRange === 0) return entries.length ? [new Date(minTs)] : []
+    const dow = new Date(minTs).getDay()
+    const daysToNextMon = dow === 1 ? 0 : (8 - dow) % 7
+    const firstMonTs = minTs + daysToNextMon * msPerDay
+    const result = []
+    for (let ts = firstMonTs; ts <= maxTs + 1000; ts += ONE_WEEK_MS) result.push(new Date(ts))
+    if (result.length === 0) {
+      result.push(new Date(minTs))
+      if (maxTs > minTs) result.push(new Date(maxTs))
+    }
+    return result
+  })()
+
   // y-axis: span all entry values + target values
   const vals = entries.map(e => parseFloat(e.value))
   if (hasTarget) {
@@ -70,7 +87,6 @@ function TrackerChart({ entries, unit, tracker }) {
   const yOf = v => T + (1 - (v - lo) / (hi - lo)) * ph
 
   const ticks = niceTicks(lo, hi)
-  const labelEvery = Math.max(1, Math.ceil(entries.length / 8))
 
   // entry geometry
   const pts = entries.map(e => `${xOf(e.date).toFixed(1)},${yOf(parseFloat(e.value)).toFixed(1)}`).join(' ')
@@ -127,14 +143,15 @@ function TrackerChart({ entries, unit, tracker }) {
           {fmt(t)}
         </text>
       ))}
-      {/* x-axis labels at entry positions */}
-      {entries.map((e, i) => (
-        (i % labelEvery === 0 || i === entries.length - 1) ? (
-          <text key={e.id} x={xOf(e.date).toFixed(1)} y={bot + 18} textAnchor="middle" fontSize={11} fill="#9ca3af">
-            {format(parseISO(e.date), 'd MMM')}
+      {/* x-axis labels: one per week */}
+      {xDateTicks.map(d => {
+        const iso = format(d, 'yyyy-MM-dd')
+        return (
+          <text key={iso} x={xOf(iso).toFixed(1)} y={bot + 18} textAnchor="middle" fontSize={11} fill="#9ca3af">
+            {format(d, 'd MMM')}
           </text>
-        ) : null
-      ))}
+        )
+      })}
     </svg>
   )
 }

@@ -58,17 +58,6 @@ class Project(models.Model):
         return self.name
 
 
-class Birthday(models.Model):
-    name = models.CharField(max_length=255)
-    date = models.DateField()
-
-    class Meta:
-        ordering = ['name']
-
-    def __str__(self):
-        return f"{self.name} ({self.date.strftime('%b %d')})"
-
-
 class Bill(models.Model):
     name = models.CharField(max_length=255)
     due_date = models.DateField()
@@ -117,6 +106,7 @@ class Person(models.Model):
     group = models.ForeignKey(PeopleGroup, on_delete=models.CASCADE, related_name='people')
     name = models.CharField(max_length=255)
     notes = models.TextField(blank=True)
+    birthday = models.DateField(null=True, blank=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:

@@ -9,7 +9,7 @@ function isoMonth(d) {
   return format(d, 'yyyy-MM')
 }
 
-export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, onTodoEdit, onBirthdayEdit, onBillEdit }) {
+export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, onTodoEdit, onBillEdit }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const monthParam = searchParams.get('month') || isoMonth(new Date())
@@ -124,13 +124,13 @@ export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, o
                 {birthdays.map((bd) => {
                   const age = new Date().getFullYear() - parseISO(bd.date).getFullYear()
                   return (
-                    <button
+                    <div
                       key={`bd-${bd.id}`}
-                      onClick={(e) => { e.stopPropagation(); onBirthdayEdit(bd) }}
-                      className="w-full text-left text-xs bg-yellow-100 text-yellow-800 rounded px-1 py-0.5 truncate hover:bg-yellow-200"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs bg-yellow-100 text-yellow-800 rounded px-1 py-0.5 truncate"
                     >
                       {bd.name} ({age} yo)
-                    </button>
+                    </div>
                   )
                 })}
 

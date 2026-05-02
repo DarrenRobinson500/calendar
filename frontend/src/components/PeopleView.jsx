@@ -62,7 +62,7 @@ function GroupModal({ group, onSuccess, onClose }) {
 }
 
 function PersonModal({ groupId, person, onSuccess, onClose }) {
-  const [form, setForm] = useState({ name: person?.name ?? '', notes: person?.notes ?? '' })
+  const [form, setForm] = useState({ name: person?.name ?? '', notes: person?.notes ?? '', birthday: person?.birthday ?? '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
@@ -72,11 +72,16 @@ function PersonModal({ groupId, person, onSuccess, onClose }) {
     e.preventDefault()
     if (!form.name.trim()) return
     setSaving(true)
+    const payload = {
+      name: form.name.trim(),
+      notes: form.notes,
+      birthday: form.birthday || null,
+    }
     try {
       if (person) {
-        await updatePerson(person.id, { ...form, name: form.name.trim(), group: person.group, order: person.order })
+        await updatePerson(person.id, { ...payload, group: person.group, order: person.order })
       } else {
-        await createPerson({ name: form.name.trim(), notes: form.notes, group: groupId, order: 0 })
+        await createPerson({ ...payload, group: groupId, order: 0 })
       }
       onSuccess()
     } catch {
@@ -102,6 +107,15 @@ function PersonModal({ groupId, person, onSuccess, onClose }) {
             placeholder="Name"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Birthday (optional)</label>
+            <input
+              type="date"
+              value={form.birthday}
+              onChange={set('birthday')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <textarea
             rows={3}
             value={form.notes}
@@ -342,7 +356,10 @@ export default function PeopleView() {
                   <div className="absolute -top-px left-0 right-0 h-0.5 bg-blue-500 pointer-events-none" />
                 )}
                 <span className="text-gray-300 hover:text-gray-400 cursor-grab active:cursor-grabbing select-none text-xs shrink-0" title="Drag to reorder">⠿</span>
-                <span className={`flex-1 text-sm truncate ${selectedPersonId === person.id ? 'text-blue-700 font-medium' : 'text-gray-700'}`}>{person.name}</span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm truncate ${selectedPersonId === person.id ? 'text-blue-700 font-medium' : 'text-gray-700'}`}>{person.name}</p>
+                  {person.birthday && <p className="text-xs text-gray-400 truncate">{format(parseISO(person.birthday), 'd MMM yyyy')}</p>}
+                </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); setPersonModal({ open: true, person }) }}
                   className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 text-xs px-1"
@@ -365,6 +382,9 @@ export default function PeopleView() {
           <h3 className="text-sm font-semibold text-gray-700">
             {selectedPerson ? `Stories — ${selectedPerson.name}` : 'Stories'}
           </h3>
+          {selectedPerson?.birthday && (
+            <p className="text-xs text-gray-500 mt-0.5">Birthday: {format(parseISO(selectedPerson.birthday), 'd MMMM yyyy')}</p>
+          )}
           {selectedPerson?.notes && (
             <p className="text-xs text-gray-500 mt-0.5 whitespace-pre-wrap">{selectedPerson.notes}</p>
           )}

@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Event, ToDo, Project, Task, Birthday, Bill, Gratitude, Setting, PeopleGroup, Person, Story, Tracker, TrackerEntry
-from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BirthdaySerializer, BillSerializer, GratitudeSerializer, PeopleGroupSerializer, PersonSerializer, StorySerializer, TrackerSerializer, TrackerEntrySerializer
+from .models import Event, ToDo, Project, Task, Bill, Gratitude, Setting, PeopleGroup, Person, Story, Tracker, TrackerEntry
+from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BillSerializer, GratitudeSerializer, PeopleGroupSerializer, PersonSerializer, StorySerializer, TrackerSerializer, TrackerEntrySerializer
 
 
 @api_view(['GET'])
@@ -29,7 +29,7 @@ def calendar_view(request):
 
     events = Event.objects.filter(date__year=year, date__month=month)
     todos = ToDo.objects.filter(next_due__lte=last_day).order_by('order', 'id')
-    birthdays = Birthday.objects.filter(date__month=month)
+    people_with_birthdays = Person.objects.filter(birthday__month=month)
     bills = Bill.objects.filter(due_date__lte=last_day)
 
     days: dict = {}
@@ -40,16 +40,16 @@ def calendar_view(request):
             days[key] = {'events': [], 'todos': [], 'night_todos': [], 'birthdays': [], 'bills': []}
         return key
 
-    for birthday in birthdays:
+    for person in people_with_birthdays:
         try:
-            display_date = date(year, month, birthday.date.day)
+            display_date = date(year, month, person.birthday.day)
         except ValueError:
             continue
         key = ensure_day(display_date)
         days[key]['birthdays'].append({
-            'id': birthday.id,
-            'name': birthday.name,
-            'date': birthday.date.isoformat(),
+            'id': person.id,
+            'name': person.name,
+            'date': person.birthday.isoformat(),
         })
 
     for event in events:
@@ -406,37 +406,6 @@ def task_bulk_update(request):
             end_date=item['end_date'],
         )
     return Response({'status': 'ok'})
-
-
-# ── Birthdays ─────────────────────────────────────────────────────────────────
-
-@api_view(['GET', 'POST'])
-def birthday_list(request):
-    if request.method == 'GET':
-        return Response(BirthdaySerializer(Birthday.objects.all(), many=True).data)
-    s = BirthdaySerializer(data=request.data)
-    if s.is_valid():
-        s.save()
-        return Response(s.data, status=status.HTTP_201_CREATED)
-    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def birthday_detail(request, pk):
-    try:
-        birthday = Birthday.objects.get(pk=pk)
-    except Birthday.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    if request.method == 'GET':
-        return Response(BirthdaySerializer(birthday).data)
-    if request.method == 'PUT':
-        s = BirthdaySerializer(birthday, data=request.data)
-        if s.is_valid():
-            s.save()
-            return Response(s.data)
-        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
-    birthday.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ── Bills ─────────────────────────────────────────────────────────────────────

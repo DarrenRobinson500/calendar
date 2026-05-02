@@ -5,7 +5,6 @@ import GratitudeView from './components/GratitudeView.jsx'
 import TodayView from './components/TodayView.jsx'
 import CalendarView from './components/CalendarView.jsx'
 import TodoListView from './components/TodoListView.jsx'
-import BirthdayListView from './components/BirthdayListView.jsx'
 import BillListView from './components/BillListView.jsx'
 import DataView from './components/DataView.jsx'
 import ProjectView from './components/ProjectView.jsx'
@@ -13,7 +12,6 @@ import PeopleView from './components/PeopleView.jsx'
 import TrackerView from './components/TrackerView.jsx'
 import EventModal from './components/EventModal.jsx'
 import TodoModal from './components/TodoModal.jsx'
-import BirthdayModal from './components/BirthdayModal.jsx'
 import BillModal from './components/BillModal.jsx'
 
 export default function App() {
@@ -21,11 +19,9 @@ export default function App() {
 
   const [eventModal, setEventModal] = useState({ open: false, event: null, defaultDate: null })
   const [todoModal, setTodoModal] = useState({ open: false, todo: null })
-  const [birthdayModal, setBirthdayModal] = useState({ open: false, birthday: null })
   const [billModal, setBillModal] = useState({ open: false, bill: null })
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0)
   const [todoRefreshKey, setTodoRefreshKey] = useState(0)
-  const [birthdayRefreshKey, setBirthdayRefreshKey] = useState(0)
   const [billRefreshKey, setBillRefreshKey] = useState(0)
 
   const openEventCreate = useCallback((defaultDate) => {
@@ -42,14 +38,6 @@ export default function App() {
 
   const openTodoEdit = useCallback((todo) => {
     setTodoModal({ open: true, todo })
-  }, [])
-
-  const openBirthdayCreate = useCallback(() => {
-    setBirthdayModal({ open: true, birthday: null })
-  }, [])
-
-  const openBirthdayEdit = useCallback((birthday) => {
-    setBirthdayModal({ open: true, birthday })
   }, [])
 
   const openBillCreate = useCallback(() => {
@@ -69,12 +57,6 @@ export default function App() {
     setTodoModal({ open: false, todo: null })
     setCalendarRefreshKey((k) => k + 1)
     setTodoRefreshKey((k) => k + 1)
-  }, [])
-
-  const handleBirthdaySuccess = useCallback(() => {
-    setBirthdayModal({ open: false, birthday: null })
-    setCalendarRefreshKey((k) => k + 1)
-    setBirthdayRefreshKey((k) => k + 1)
   }, [])
 
   const handleBillSuccess = useCallback(() => {
@@ -104,7 +86,6 @@ export default function App() {
           Calendar
         </Link>
         {navLink('/todos', 'To-Dos')}
-        {navLink('/birthdays', 'Birthdays')}
         {navLink('/bills', 'Bills')}
         {navLink('/projects', 'Projects')}
         {navLink('/people', 'People')}
@@ -124,7 +105,6 @@ export default function App() {
                 refreshKey={calendarRefreshKey}
                 onEventEdit={openEventEdit}
                 onTodoEdit={openTodoEdit}
-                onBirthdayEdit={openBirthdayEdit}
                 onBillEdit={openBillEdit}
               />
             }
@@ -137,7 +117,6 @@ export default function App() {
                 onEventCreate={openEventCreate}
                 onEventEdit={openEventEdit}
                 onTodoEdit={openTodoEdit}
-                onBirthdayEdit={openBirthdayEdit}
                 onBillEdit={openBillEdit}
               />
             }
@@ -149,16 +128,6 @@ export default function App() {
                 refreshKey={todoRefreshKey}
                 onTodoCreate={openTodoCreate}
                 onTodoEdit={openTodoEdit}
-              />
-            }
-          />
-          <Route
-            path="/birthdays"
-            element={
-              <BirthdayListView
-                refreshKey={birthdayRefreshKey}
-                onBirthdayCreate={openBirthdayCreate}
-                onBirthdayEdit={openBirthdayEdit}
               />
             }
           />
@@ -195,14 +164,6 @@ export default function App() {
           todo={todoModal.todo}
           onSuccess={handleTodoSuccess}
           onClose={() => setTodoModal({ open: false, todo: null })}
-        />
-      )}
-
-      {birthdayModal.open && (
-        <BirthdayModal
-          birthday={birthdayModal.birthday}
-          onSuccess={handleBirthdaySuccess}
-          onClose={() => setBirthdayModal({ open: false, birthday: null })}
         />
       )}
 
