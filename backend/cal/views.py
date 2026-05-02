@@ -584,12 +584,17 @@ def story_list(request):
     return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['DELETE'])
+@api_view(['PUT', 'DELETE'])
 def story_detail(request, pk):
     try:
         story = Story.objects.get(pk=pk)
     except Story.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'PUT':
+        story.heading = request.data.get('heading', story.heading)
+        story.text = request.data.get('text', story.text)
+        story.save()
+        return Response(StorySerializer(story).data)
     story.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 

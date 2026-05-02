@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns'
 import {
   getPeopleGroups, createPeopleGroup, updatePeopleGroup, deletePeopleGroup, reorderPeopleGroups,
   getPeople, createPerson, updatePerson, deletePerson, reorderPeople,
-  getStories, createStory, deleteStory,
+  getStories, createStory, updateStory, deleteStory,
 } from '../api.js'
 
 function GroupModal({ group, onSuccess, onClose }) {
@@ -151,6 +151,7 @@ export default function PeopleView() {
   const [loadingPeople, setLoadingPeople] = useState(false)
   const [loadingStories, setLoadingStories] = useState(false)
   const [savingStory, setSavingStory] = useState(false)
+  const [editingStory, setEditingStory] = useState(null)
   const [groupModal, setGroupModal] = useState({ open: false, group: null })
   const [personModal, setPersonModal] = useState({ open: false, person: null })
   const storyRef = useRef(null)
@@ -228,6 +229,14 @@ export default function PeopleView() {
     if (!confirm('Delete this story?')) return
     await deleteStory(id)
     setStories((s) => s.filter((x) => x.id !== id))
+  }
+
+  const handleSaveStory = async (e) => {
+    e.preventDefault()
+    if (!editingStory) return
+    const res = await updateStory(editingStory.id, { heading: editingStory.heading, text: editingStory.text })
+    setStories((s) => s.map((x) => x.id === editingStory.id ? res.data : x))
+    setEditingStory(null)
   }
 
   const handleStoryKeyDown = (e) => {
@@ -431,17 +440,50 @@ export default function PeopleView() {
             ) : (
               <ul className="space-y-3">
                 {stories.map((story) => (
-                  <li key={story.id} className="relative bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 flex items-start gap-3 group">
-                    <div className="flex-1 min-w-0">
-                      {story.heading && <p className="text-gray-800 text-sm font-semibold mb-1">{story.heading}</p>}
-                      {story.text && <p className="text-gray-700 text-sm whitespace-pre-wrap">{story.text}</p>}
-                      <p className="text-xs text-gray-400 mt-1">{format(parseISO(story.created_at), 'EEE d MMM yyyy, h:mm a')}</p>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteStory(story.id)}
-                      className="shrink-0 text-gray-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 text-lg leading-none mt-0.5"
-                      title="Delete"
-                    >&times;</button>
+                  <li key={story.id} className="relative bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 group">
+                    {editingStory?.id === story.id ? (
+                      <form onSubmit={handleSaveStory} className="space-y-2">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={editingStory.heading}
+                          onChange={(e) => setEditingStory((s) => ({ ...s, heading: e.target.value }))}
+                          placeholder="Heading"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <textarea
+                          rows={4}
+                          value={editingStory.text}
+                          onChange={(e) => setEditingStory((s) => ({ ...s, text: e.target.value }))}
+                          placeholder="Story…"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <button type="button" onClick={() => setEditingStory(null)} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                          <button type="submit" className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          {story.heading && <p className="text-gray-800 text-sm font-semibold mb-1">{story.heading}</p>}
+                          {story.text && <p className="text-gray-700 text-sm whitespace-pre-wrap">{story.text}</p>}
+                          <p className="text-xs text-gray-400 mt-1">{format(parseISO(story.created_at), 'EEE d MMM yyyy, h:mm a')}</p>
+                        </div>
+                        <div className="shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 mt-0.5">
+                          <button
+                            onClick={() => setEditingStory({ id: story.id, heading: story.heading, text: story.text })}
+                            className="text-gray-400 hover:text-blue-500 transition-colors text-xs px-1"
+                            title="Edit"
+                          >✎</button>
+                          <button
+                            onClick={() => handleDeleteStory(story.id)}
+                            className="text-gray-300 hover:text-red-400 transition-colors text-lg leading-none"
+                            title="Delete"
+                          >&times;</button>
+                        </div>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
