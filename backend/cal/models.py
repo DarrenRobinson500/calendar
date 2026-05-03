@@ -38,6 +38,7 @@ class ToDo(models.Model):
     order = models.PositiveIntegerField(default=0)
     one_off = models.BooleanField(default=False)
     night_time = models.BooleanField(default=False)
+    sticky = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['order', 'id']

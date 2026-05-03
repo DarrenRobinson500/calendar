@@ -11,7 +11,7 @@ class EventSerializer(serializers.ModelSerializer):
 class ToDoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ToDo
-        fields = ['id', 'name', 'description', 'frequency_days', 'next_due', 'order', 'one_off', 'night_time']
+        fields = ['id', 'name', 'description', 'frequency_days', 'next_due', 'order', 'one_off', 'night_time', 'sticky']
 
 
 class ProjectSerializer(serializers.ModelSerializer):

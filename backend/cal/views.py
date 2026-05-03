@@ -203,7 +203,12 @@ def todo_done(request, pk):
     except ValueError:
         today = localdate()
 
-    todo.next_due = today + timedelta(days=todo.frequency_days)
+    if todo.sticky:
+        days_elapsed = (today - todo.next_due).days
+        k = max(1, days_elapsed // todo.frequency_days + 1)
+        todo.next_due = todo.next_due + timedelta(days=todo.frequency_days * k)
+    else:
+        todo.next_due = today + timedelta(days=todo.frequency_days)
     todo.save()
     return Response(ToDoSerializer(todo).data)
 

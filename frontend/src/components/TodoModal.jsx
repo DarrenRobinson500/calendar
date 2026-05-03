@@ -13,6 +13,7 @@ export default function TodoModal({ todo, onSuccess, onClose }) {
     next_due: todo?.next_due || today,
     one_off: todo?.one_off ?? false,
     night_time: todo?.night_time ?? false,
+    sticky: todo?.sticky ?? false,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -83,7 +84,7 @@ export default function TodoModal({ todo, onSuccess, onClose }) {
             />
           </div>
 
-          <div className="flex gap-6">
+          <div className="flex gap-6 flex-wrap">
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -102,6 +103,17 @@ export default function TodoModal({ todo, onSuccess, onClose }) {
               />
               <span className="text-sm text-gray-700">Night-time</span>
             </label>
+            {!form.one_off && (
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={form.sticky}
+                  onChange={toggle('sticky')}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600"
+                />
+                <span className="text-sm text-gray-700">Sticky</span>
+              </label>
+            )}
           </div>
 
           {!form.one_off && (

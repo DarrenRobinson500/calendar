@@ -13,7 +13,8 @@
       "Bash(Select-Object FullName)",
       "Bash(python manage.py migrate)",
       "PowerShell(& \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\manage.py\" migrate 2>&1)",
-      "PowerShell($python = \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\"; $manage = \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\manage.py\"; & $python $manage migrate 2>&1)"
+      "PowerShell($python = \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\"; $manage = \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\manage.py\"; & $python $manage migrate 2>&1)",
+      "PowerShell(& \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\manage.py\" migrate 2>&1)"
     ]
   }
 }
