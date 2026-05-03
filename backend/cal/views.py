@@ -27,6 +27,8 @@ def calendar_view(request):
     first_day = date(year, month, 1)
     last_day = date(year, month, days_in_month)
 
+    ToDo.objects.filter(one_off=True, next_due__lt=today).update(next_due=today)
+
     events = Event.objects.filter(date__year=year, date__month=month)
     todos = ToDo.objects.filter(next_due__lte=last_day).order_by('order', 'id')
     people_with_birthdays = Person.objects.filter(birthday__month=month)
@@ -195,7 +197,13 @@ def todo_done(request, pk):
         todo.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    todo.next_due = localdate() + timedelta(days=todo.frequency_days)
+    client_date = request.data.get('date')
+    try:
+        today = date.fromisoformat(client_date) if client_date else localdate()
+    except ValueError:
+        today = localdate()
+
+    todo.next_due = today + timedelta(days=todo.frequency_days)
     todo.save()
     return Response(ToDoSerializer(todo).data)
 

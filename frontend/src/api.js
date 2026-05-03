@@ -14,7 +14,12 @@ export const getTodos = () => api.get('/todos/')
 export const createTodo = (data) => api.post('/todos/', data)
 export const updateTodo = (id, data) => api.put(`/todos/${id}/`, data)
 export const deleteTodo = (id) => api.delete(`/todos/${id}/`)
-export const markTodoDone = (id) => api.post(`/todos/${id}/done/`)
+const localDateStr = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+export const markTodoDone = (id) => api.post(`/todos/${id}/done/`, { date: localDateStr() })
 export const reorderTodos = (orderedIds) => api.post('/todos/reorder/', orderedIds)
 
 export const getProjects = () => api.get('/projects/')
