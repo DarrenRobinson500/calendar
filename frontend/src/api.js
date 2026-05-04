@@ -80,3 +80,32 @@ export const reorderTrackers = (orderedIds) => api.post('/trackers/reorder/', or
 export const getTrackerEntries = (trackerId) => api.get(`/tracker-entries/?tracker=${trackerId}`)
 export const upsertTrackerEntry = (data) => api.post('/tracker-entries/', data)
 export const deleteTrackerEntry = (id) => api.delete(`/tracker-entries/${id}/`)
+
+export const getDogs = () => api.get('/dogs/')
+export const createDog = (data) => api.post('/dogs/', data)
+export const updateDog = (id, data) => api.put(`/dogs/${id}/`, data)
+export const deleteDog = (id) => api.delete(`/dogs/${id}/`)
+export const reorderDogs = (orderedIds) => api.post('/dogs/reorder/', orderedIds)
+
+export const getDogVisits = (dogId) => api.get(`/dog-visits/?dog=${dogId}`)
+export const createDogVisit = (data) => api.post('/dog-visits/', data)
+export const updateDogVisit = (id, data) => api.put(`/dog-visits/${id}/`, data)
+export const deleteDogVisit = (id) => api.delete(`/dog-visits/${id}/`)
+
+export const getDogStories = (dogId) => api.get(`/dog-stories/?dog=${dogId}`)
+export const createDogStory = (data) => api.post('/dog-stories/', data)
+export const updateDogStory = (id, data) => api.put(`/dog-stories/${id}/`, data)
+export const deleteDogStory = (id) => api.delete(`/dog-stories/${id}/`)
+
+export const getShops = () => api.get('/shops/')
+export const createShop = (data) => api.post('/shops/', data)
+export const updateShop = (id, data) => api.put(`/shops/${id}/`, data)
+export const deleteShop = (id) => api.delete(`/shops/${id}/`)
+export const reorderShops = (orderedIds) => api.post('/shops/reorder/', orderedIds)
+
+export const getShoppingItems = (shopId) => api.get(`/shopping-items/?shop=${shopId}`)
+export const createShoppingItem = (data) => api.post('/shopping-items/', data)
+export const updateShoppingItem = (id, data) => api.put(`/shopping-items/${id}/`, data)
+export const deleteShoppingItem = (id) => api.delete(`/shopping-items/${id}/`)
+export const reorderShoppingItems = (orderedIds) => api.post('/shopping-items/reorder/', orderedIds)
+export const toggleShoppingItem = (id) => api.post(`/shopping-items/${id}/toggle/`)

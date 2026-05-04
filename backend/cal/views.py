@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Event, ToDo, Project, Task, Bill, Gratitude, Setting, PeopleGroup, Person, Story, Tracker, TrackerEntry
-from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BillSerializer, GratitudeSerializer, PeopleGroupSerializer, PersonSerializer, StorySerializer, TrackerSerializer, TrackerEntrySerializer
+from .models import Event, ToDo, Project, Task, Bill, Gratitude, Setting, PeopleGroup, Person, Story, Tracker, TrackerEntry, Dog, DogVisit, DogStory, Shop, ShoppingItem
+from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BillSerializer, GratitudeSerializer, PeopleGroupSerializer, PersonSerializer, StorySerializer, TrackerSerializer, TrackerEntrySerializer, DogSerializer, DogVisitSerializer, DogStorySerializer, ShopSerializer, ShoppingItemSerializer
 
 
 @api_view(['GET'])
@@ -39,7 +39,7 @@ def calendar_view(request):
     def ensure_day(d: date):
         key = d.isoformat()
         if key not in days:
-            days[key] = {'events': [], 'todos': [], 'night_todos': [], 'birthdays': [], 'bills': []}
+            days[key] = {'events': [], 'todos': [], 'night_todos': [], 'birthdays': [], 'bills': [], 'dog_visits': []}
         return key
 
     for person in people_with_birthdays:
@@ -115,6 +115,34 @@ def calendar_view(request):
                 'name': task.name,
                 'project_name': task.project.name,
                 'project_id': task.project.id,
+            })
+            day += timedelta(days=1)
+
+    dog_visits = DogVisit.objects.filter(
+        start_date__lte=last_day,
+        end_date__gte=first_day,
+    ).select_related('dog').order_by('start_date', 'dog__name')
+
+    for visit in dog_visits:
+        day = max(visit.start_date, first_day)
+        end = min(visit.end_date, last_day)
+        while day <= end:
+            key = ensure_day(day)
+            if visit.start_date == visit.end_date:
+                visit_type = 'single'
+            elif day == visit.start_date:
+                visit_type = 'start'
+            elif day == visit.end_date:
+                visit_type = 'end'
+            else:
+                visit_type = 'staying'
+            days[key]['dog_visits'].append({
+                'id': visit.id,
+                'dog_id': visit.dog.id,
+                'dog_name': visit.dog.name,
+                'type': visit_type,
+                'start_date': visit.start_date.isoformat(),
+                'end_date': visit.end_date.isoformat(),
             })
             day += timedelta(days=1)
 
@@ -679,3 +707,187 @@ def tracker_entry_detail(request, pk):
         return Response(status=status.HTTP_404_NOT_FOUND)
     entry.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Dogs ──────────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def dog_list(request):
+    if request.method == 'GET':
+        return Response(DogSerializer(Dog.objects.all(), many=True).data)
+    s = DogSerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def dog_detail(request, pk):
+    try:
+        dog = Dog.objects.get(pk=pk)
+    except Dog.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'GET':
+        return Response(DogSerializer(dog).data)
+    if request.method == 'PUT':
+        s = DogSerializer(dog, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+    dog.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+def dog_reorder(request):
+    for position, dog_id in enumerate(request.data):
+        Dog.objects.filter(pk=dog_id).update(order=position)
+    return Response({'status': 'ok'})
+
+
+# ── Dog Visits ────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def dog_visit_list(request):
+    if request.method == 'GET':
+        dog_id = request.query_params.get('dog')
+        qs = DogVisit.objects.filter(dog_id=dog_id) if dog_id else DogVisit.objects.all()
+        return Response(DogVisitSerializer(qs, many=True).data)
+    s = DogVisitSerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT', 'DELETE'])
+def dog_visit_detail(request, pk):
+    try:
+        visit = DogVisit.objects.get(pk=pk)
+    except DogVisit.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'PUT':
+        s = DogVisitSerializer(visit, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+    visit.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Dog Stories ───────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def dog_story_list(request):
+    if request.method == 'GET':
+        dog_id = request.query_params.get('dog')
+        qs = DogStory.objects.filter(dog_id=dog_id) if dog_id else DogStory.objects.all()
+        return Response(DogStorySerializer(qs, many=True).data)
+    s = DogStorySerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT', 'DELETE'])
+def dog_story_detail(request, pk):
+    try:
+        story = DogStory.objects.get(pk=pk)
+    except DogStory.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'PUT':
+        story.heading = request.data.get('heading', story.heading)
+        story.text = request.data.get('text', story.text)
+        story.save()
+        return Response(DogStorySerializer(story).data)
+    story.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Shops ─────────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def shop_list(request):
+    if request.method == 'GET':
+        return Response(ShopSerializer(Shop.objects.all(), many=True).data)
+    s = ShopSerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT', 'DELETE'])
+def shop_detail(request, pk):
+    try:
+        shop = Shop.objects.get(pk=pk)
+    except Shop.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'PUT':
+        s = ShopSerializer(shop, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+    shop.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+def shop_reorder(request):
+    for position, shop_id in enumerate(request.data):
+        Shop.objects.filter(pk=shop_id).update(order=position)
+    return Response({'status': 'ok'})
+
+
+# ── Shopping Items ────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def shopping_item_list(request):
+    if request.method == 'GET':
+        shop_id = request.query_params.get('shop')
+        qs = ShoppingItem.objects.filter(shop_id=shop_id) if shop_id else ShoppingItem.objects.all()
+        return Response(ShoppingItemSerializer(qs, many=True).data)
+    s = ShoppingItemSerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT', 'DELETE'])
+def shopping_item_detail(request, pk):
+    try:
+        item = ShoppingItem.objects.get(pk=pk)
+    except ShoppingItem.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'PUT':
+        s = ShoppingItemSerializer(item, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+    item.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+def shopping_item_reorder(request):
+    for position, item_id in enumerate(request.data):
+        ShoppingItem.objects.filter(pk=item_id).update(order=position)
+    return Response({'status': 'ok'})
+
+
+@api_view(['POST'])
+def shopping_item_toggle(request, pk):
+    try:
+        item = ShoppingItem.objects.get(pk=pk)
+    except ShoppingItem.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    item.checked = not item.checked
+    item.save()
+    return Response(ShoppingItemSerializer(item).data)

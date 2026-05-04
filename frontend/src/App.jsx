@@ -9,6 +9,8 @@ import BillListView from './components/BillListView.jsx'
 import DataView from './components/DataView.jsx'
 import ProjectView from './components/ProjectView.jsx'
 import PeopleView from './components/PeopleView.jsx'
+import DogsView from './components/DogsView.jsx'
+import ShoppingView from './components/ShoppingView.jsx'
 import TrackerView from './components/TrackerView.jsx'
 import EventModal from './components/EventModal.jsx'
 import TodoModal from './components/TodoModal.jsx'
@@ -89,6 +91,8 @@ export default function App() {
         {navLink('/bills', 'Bills')}
         {navLink('/projects', 'Projects')}
         {navLink('/people', 'People')}
+        {navLink('/dogs', 'Dogs')}
+        {navLink('/shopping', 'Shopping')}
         {navLink('/claude', 'Claude')}
         {navLink('/gratitude', 'Gratitude')}
         {navLink('/data', 'Data')}
@@ -142,6 +146,8 @@ export default function App() {
             }
           />
           <Route path="/people" element={<PeopleView />} />
+          <Route path="/dogs" element={<DogsView />} />
+          <Route path="/shopping" element={<ShoppingView />} />
           <Route path="/tracker" element={<TrackerView />} />
           <Route path="/claude" element={<ClaudeView />} />
           <Route path="/gratitude" element={<GratitudeView />} />

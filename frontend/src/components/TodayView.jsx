@@ -23,7 +23,8 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBillEdi
   const projectTasks = dayData?.project_tasks || []
   const nightTodos = dayData?.night_todos || []
   const bills = dayData?.bills || []
-  const total = birthdays.length + events.length + todos.length + projectTasks.length + nightTodos.length + bills.length
+  const dogVisits = dayData?.dog_visits || []
+  const total = birthdays.length + events.length + todos.length + projectTasks.length + nightTodos.length + bills.length + dogVisits.length
 
   const handleTodoDone = async (id) => { await markTodoDone(id); refetch() }
   const handleTaskDone = async (id) => { await markTaskDone(id); refetch() }
@@ -141,6 +142,21 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBillEdi
               </div>
             </ItemRow>
           ))}
+
+          {dogVisits.map((dv) => {
+            const label = dv.type === 'start' ? 'arrives' : dv.type === 'end' ? 'departs' : dv.type === 'single' ? 'day visit' : 'staying'
+            return (
+              <ItemRow
+                key={`dv-${dv.id}`}
+                color="bg-orange-100"
+                onDoubleClick={() => navigate('/dogs')}
+                title="Double-click to open dogs"
+              >
+                <p className="font-medium text-orange-800">🐕 {dv.dog_name}</p>
+                <p className="text-xs text-orange-700 mt-0.5 capitalize">{label}</p>
+              </ItemRow>
+            )
+          })}
         </div>
       )}
     </div>

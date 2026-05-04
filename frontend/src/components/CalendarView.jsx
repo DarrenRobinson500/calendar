@@ -107,6 +107,7 @@ export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, o
           const projectTasks = dayData?.project_tasks || []
           const nightTodos = dayData?.night_todos || []
           const bills = dayData?.bills || []
+          const dogVisits = dayData?.dog_visits || []
 
           const isToday = dateKey === todayKey
 
@@ -230,6 +231,21 @@ export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, o
                     </button>
                   </div>
                 ))}
+
+                {dogVisits.map((dv) => {
+                  const suffix = dv.type === 'start' ? ' ▶' : dv.type === 'end' ? ' ◀' : dv.type === 'single' ? '' : ''
+                  return (
+                    <div
+                      key={`dv-${dv.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      onDoubleClick={(e) => { e.stopPropagation(); navigate('/dogs') }}
+                      className="text-xs bg-orange-100 text-orange-800 rounded px-1 py-0.5 truncate cursor-pointer"
+                      title={`${dv.dog_name} — double-click to open dogs`}
+                    >
+                      🐕 {dv.dog_name}{suffix}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )

@@ -14,7 +14,18 @@
       "Bash(python manage.py migrate)",
       "PowerShell(& \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\manage.py\" migrate 2>&1)",
       "PowerShell($python = \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\"; $manage = \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\manage.py\"; & $python $manage migrate 2>&1)",
-      "PowerShell(& \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\manage.py\" migrate 2>&1)"
+      "PowerShell(& \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\manage.py\" migrate 2>&1)",
+      "Bash(Get-ChildItem -Recurse -Directory)",
+      "Bash(python manage.py makemigrations)",
+      "Bash(\"/c/Users/darre/AppData/Local/Programs/Python/Python310/python\" manage.py makemigrations)",
+      "Bash(\"/c/Users/darre/AppData/Local/Programs/Python/Python310/python\" -m pip show django)",
+      "Bash(\"/c/Users/darre/PycharmProjects/calendar/.venv/Scripts/python.exe\" manage.py makemigrations)",
+      "Bash(\"/c/Users/darre/PycharmProjects/calendar/.venv/Scripts/python.exe\" manage.py migrate)",
+      "Bash(/c/Users/darre/PycharmProjects/calendar/.venv/Scripts/python.exe *)",
+      "PowerShell(Get-ChildItem *)",
+      "Bash(\"/c/Users/darre/PycharmProjects/calendar/calproject/backend/.venv/Scripts/python.exe\" manage.py makemigrations)",
+      "Bash(\"/c/Users/darre/PycharmProjects/calendar/calproject/backend/.venv/Scripts/python.exe\" manage.py migrate)",
+      "Bash(\"/c/Users/darre/PycharmProjects/calendar/calproject/backend/.venv/Scripts/python.exe\" manage.py check)"
     ]
   }
 }

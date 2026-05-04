@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Event, ToDo, Project, Task, Bill, Gratitude, PeopleGroup, Person, Story, Tracker, TrackerEntry
+from .models import Event, ToDo, Project, Task, Bill, Gratitude, PeopleGroup, Person, Story, Tracker, TrackerEntry, Dog, DogVisit, DogStory, Shop, ShoppingItem
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -66,3 +66,33 @@ class TrackerEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = TrackerEntry
         fields = ['id', 'tracker', 'date', 'value']
+
+
+class DogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Dog
+        fields = ['id', 'name', 'owner', 'phone', 'order']
+
+
+class DogVisitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DogVisit
+        fields = ['id', 'dog', 'start_date', 'end_date']
+
+
+class DogStorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DogStory
+        fields = ['id', 'dog', 'heading', 'text', 'created_at']
+
+
+class ShopSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Shop
+        fields = ['id', 'name', 'order']
+
+
+class ShoppingItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShoppingItem
+        fields = ['id', 'shop', 'name', 'checked', 'order']

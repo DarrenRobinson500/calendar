@@ -157,3 +157,65 @@ class TrackerEntry(models.Model):
 
     def __str__(self):
         return f"{self.tracker.name} {self.date}: {self.value}"
+
+
+class Dog(models.Model):
+    name = models.CharField(max_length=255)
+    owner = models.CharField(max_length=255)
+    phone = models.CharField(max_length=50, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.owner})"
+
+
+class DogVisit(models.Model):
+    dog = models.ForeignKey(Dog, on_delete=models.CASCADE, related_name='visits')
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    class Meta:
+        ordering = ['start_date']
+
+    def __str__(self):
+        return f"{self.dog.name}: {self.start_date} to {self.end_date}"
+
+
+class DogStory(models.Model):
+    dog = models.ForeignKey(Dog, on_delete=models.CASCADE, related_name='stories')
+    heading = models.CharField(max_length=255, blank=True)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.dog.name}: {self.text[:60]}"
+
+
+class Shop(models.Model):
+    name = models.CharField(max_length=255)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.name
+
+
+class ShoppingItem(models.Model):
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='items')
+    name = models.CharField(max_length=255)
+    checked = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"{self.shop.name}: {self.name}"
