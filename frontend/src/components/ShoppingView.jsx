@@ -254,7 +254,7 @@ export default function ShoppingView() {
                     onDragOver={(e) => handleItemDragOver(e, idx)}
                     onDragEnd={handleItemDragEnd}
                     onDrop={() => handleItemDrop(idx)}
-                    className={`relative flex items-center gap-3 px-3 py-2 rounded-lg group border border-transparent hover:bg-gray-50 hover:border-gray-100 ${item.checked ? 'opacity-50' : ''}`}
+                    className={`relative flex items-center gap-3 px-3 py-2 rounded-lg group border ${item.checked ? 'bg-emerald-50 border-emerald-200' : 'border-transparent hover:bg-gray-50 hover:border-gray-100'}`}
                   >
                     {dragItemOver === idx && dragItemIdx.current !== idx && (
                       <div className="absolute -top-px left-0 right-0 h-0.5 bg-emerald-500 pointer-events-none" />
@@ -269,7 +269,7 @@ export default function ShoppingView() {
                       onChange={() => handleToggle(item.id)}
                       className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 shrink-0 cursor-pointer"
                     />
-                    <span className={`flex-1 text-sm ${item.checked ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                    <span className={`flex-1 text-sm ${item.checked ? 'text-emerald-800 font-medium' : 'text-gray-700'}`}>
                       {item.name}
                     </span>
                     <button
