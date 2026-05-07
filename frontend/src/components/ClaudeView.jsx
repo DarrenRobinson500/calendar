@@ -8,6 +8,18 @@ function formatDisplay(date) {
   return format(date, "EEE d MMM yyyy, h:mm a")
 }
 
+function formatTimeDiff(ms) {
+  const totalMinutes = Math.round(Math.abs(ms) / 60000)
+  const days = Math.floor(totalMinutes / (60 * 24))
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60)
+  const minutes = totalMinutes % 60
+  const parts = []
+  if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`)
+  if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`)
+  if (minutes > 0 && days === 0) parts.push(`${minutes} min`)
+  return parts.join(' ') || 'less than a minute'
+}
+
 function ProgressBar({ percent, color }) {
   const clamped = Math.min(Math.max(percent, 0), 100)
   return (
@@ -118,8 +130,8 @@ export default function ClaudeView() {
               <p className={`text-lg font-semibold ${overPace ? 'text-red-800' : 'text-green-800'}`}>{formatDisplay(evenAt)}</p>
               <p className={`text-sm mt-1 ${overPace ? 'text-red-600' : 'text-green-600'}`}>
                 {overPace
-                  ? `Using faster than weekly pace — ${(usedNum - percentElapsed).toFixed(1)}% over`
-                  : `Using slower than weekly pace — ${(percentElapsed - usedNum).toFixed(1)}% under`}
+                  ? `Using faster than weekly pace — ${formatTimeDiff((usedNum - percentElapsed) / 100 * WEEK_MS)} over`
+                  : `Using slower than weekly pace — ${formatTimeDiff((percentElapsed - usedNum) / 100 * WEEK_MS)} under`}
               </p>
             </div>
           )}
