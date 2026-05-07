@@ -148,10 +148,7 @@ export default function PeopleView() {
   const [people, setPeople] = useState([])
   const [allPeople, setAllPeople] = useState([])
   const [selectedPersonId, setSelectedPersonId] = useState(null)
-  const pendingPersonId = useRef(() => {
-    const v = sessionStorage.getItem('people.personId')
-    return v ? Number(v) : null
-  }())
+  const pendingPersonId = useRef(sessionStorage.getItem('people.personId') ? Number(sessionStorage.getItem('people.personId')) : null)
   const [stories, setStories] = useState([])
   const [storyHeading, setStoryHeading] = useState('')
   const [storyText, setStoryText] = useState('')
