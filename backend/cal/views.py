@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Event, ToDo, Project, Task, Bill, Gratitude, Setting, PeopleGroup, Person, Story, Tracker, TrackerEntry, Dog, DogVisit, DogStory, Shop, ShoppingItem
-from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BillSerializer, GratitudeSerializer, PeopleGroupSerializer, PersonSerializer, StorySerializer, TrackerSerializer, TrackerEntrySerializer, DogSerializer, DogVisitSerializer, DogStorySerializer, ShopSerializer, ShoppingItemSerializer
+from .models import Event, ToDo, Project, Task, Bill, Quote, Gratitude, Setting, PeopleGroup, Person, Story, Tracker, TrackerEntry, Dog, DogVisit, DogStory, Shop, ShoppingItem
+from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BillSerializer, QuoteSerializer, GratitudeSerializer, PeopleGroupSerializer, PersonSerializer, StorySerializer, TrackerSerializer, TrackerEntrySerializer, DogSerializer, DogVisitSerializer, DogStorySerializer, ShopSerializer, ShoppingItemSerializer
 
 
 @api_view(['GET'])
@@ -39,7 +39,7 @@ def calendar_view(request):
     def ensure_day(d: date):
         key = d.isoformat()
         if key not in days:
-            days[key] = {'events': [], 'todos': [], 'night_todos': [], 'birthdays': [], 'bills': [], 'dog_visits': []}
+            days[key] = {'events': [], 'todos': [], 'night_todos': [], 'birthdays': [], 'bills': [], 'dog_visits': [], 'project_tasks': [], 'night_project_tasks': []}
         return key
 
     for person in people_with_birthdays:
@@ -106,16 +106,18 @@ def calendar_view(request):
     for task in project_tasks:
         day = max(task.start_date, first_day)
         end = min(task.end_date, last_day)
+        task_data = {
+            'id': task.id,
+            'name': task.name,
+            'project_name': task.project.name,
+            'project_id': task.project.id,
+        }
         while day <= end:
             key = ensure_day(day)
-            if 'project_tasks' not in days[key]:
-                days[key]['project_tasks'] = []
-            days[key]['project_tasks'].append({
-                'id': task.id,
-                'name': task.name,
-                'project_name': task.project.name,
-                'project_id': task.project.id,
-            })
+            if task.night_time:
+                days[key]['night_project_tasks'].append(task_data)
+            else:
+                days[key]['project_tasks'].append(task_data)
             day += timedelta(days=1)
 
     dog_visits = DogVisit.objects.filter(
@@ -491,6 +493,36 @@ def bill_done(request, pk):
     return Response(BillSerializer(bill).data)
 
 
+# ── Quotes ────────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def quote_list(request):
+    if request.method == 'GET':
+        return Response(QuoteSerializer(Quote.objects.all(), many=True).data)
+    s = QuoteSerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def quote_reorder(request):
+    for position, entry_id in enumerate(request.data):
+        Quote.objects.filter(pk=entry_id).update(order=position)
+    return Response({'status': 'ok'})
+
+
+@api_view(['DELETE'])
+def quote_detail(request, pk):
+    try:
+        entry = Quote.objects.get(pk=pk)
+    except Quote.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    entry.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 # ── Gratitude ─────────────────────────────────────────────────────────────────
 
 @api_view(['GET', 'POST'])
@@ -616,7 +648,7 @@ def person_reorder(request):
 def story_list(request):
     if request.method == 'GET':
         person_id = request.query_params.get('person')
-        qs = Story.objects.filter(person_id=person_id) if person_id else Story.objects.all()
+        qs = Story.objects.filter(people=person_id) if person_id else Story.objects.all()
         return Response(StorySerializer(qs, many=True).data)
     s = StorySerializer(data=request.data)
     if s.is_valid():
@@ -632,10 +664,11 @@ def story_detail(request, pk):
     except Story.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     if request.method == 'PUT':
-        story.heading = request.data.get('heading', story.heading)
-        story.text = request.data.get('text', story.text)
-        story.save()
-        return Response(StorySerializer(story).data)
+        s = StorySerializer(story, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
     story.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 

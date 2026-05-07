@@ -148,7 +148,10 @@ function VisitModal({ dogId, visit, onSuccess, onClose }) {
 
 export default function DogsView() {
   const [dogs, setDogs] = useState([])
-  const [selectedDogId, setSelectedDogId] = useState(null)
+  const [selectedDogId, setSelectedDogId] = useState(() => {
+    const v = sessionStorage.getItem('dogs.dogId')
+    return v ? Number(v) : null
+  })
   const [visits, setVisits] = useState([])
   const [stories, setStories] = useState([])
   const [storyHeading, setStoryHeading] = useState('')
@@ -164,6 +167,11 @@ export default function DogsView() {
 
   const dragDogIdx = useRef(null)
   const [dragDogOver, setDragDogOver] = useState(null)
+
+  useEffect(() => {
+    if (selectedDogId != null) sessionStorage.setItem('dogs.dogId', String(selectedDogId))
+    else sessionStorage.removeItem('dogs.dogId')
+  }, [selectedDogId])
 
   useEffect(() => {
     getDogs()

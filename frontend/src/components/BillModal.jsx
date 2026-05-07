@@ -2,10 +2,9 @@ import { useState } from 'react'
 import { format } from 'date-fns'
 import { createBill, updateBill, deleteBill } from '../api.js'
 
-const today = format(new Date(), 'yyyy-MM-dd')
-
 export default function BillModal({ bill, onSuccess, onClose }) {
   const isEdit = Boolean(bill)
+  const today = format(new Date(), 'yyyy-MM-dd')
   const [form, setForm] = useState({
     name: bill?.name || '',
     due_date: bill?.due_date || today,

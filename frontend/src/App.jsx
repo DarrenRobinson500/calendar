@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import ClaudeView from './components/ClaudeView.jsx'
 import GratitudeView from './components/GratitudeView.jsx'
+import QuotesView from './components/QuotesView.jsx'
 import TodayView from './components/TodayView.jsx'
 import CalendarView from './components/CalendarView.jsx'
 import TodoListView from './components/TodoListView.jsx'
@@ -94,6 +95,7 @@ export default function App() {
         {navLink('/dogs', 'Dogs')}
         {navLink('/shopping', 'Shopping')}
         {navLink('/claude', 'Claude')}
+        {navLink('/quotes', 'Quotes')}
         {navLink('/gratitude', 'Gratitude')}
         {navLink('/data', 'Data')}
         {navLink('/tracker', 'Tracker')}
@@ -150,6 +152,7 @@ export default function App() {
           <Route path="/shopping" element={<ShoppingView />} />
           <Route path="/tracker" element={<TrackerView />} />
           <Route path="/claude" element={<ClaudeView />} />
+          <Route path="/quotes" element={<QuotesView />} />
           <Route path="/gratitude" element={<GratitudeView />} />
           <Route path="/projects" element={<ProjectView />} />
           <Route path="/data" element={<DataView />} />

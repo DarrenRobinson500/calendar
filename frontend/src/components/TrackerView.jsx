@@ -254,7 +254,10 @@ export default function TrackerView() {
   const today = format(new Date(), 'yyyy-MM-dd')
 
   const [trackers, setTrackers] = useState([])
-  const [selectedId, setSelectedId] = useState(null)
+  const [selectedId, setSelectedId] = useState(() => {
+    const v = sessionStorage.getItem('tracker.selectedId')
+    return v ? Number(v) : null
+  })
   const [entries, setEntries] = useState([])
   const [entryDate, setEntryDate] = useState(today)
   const [entryValue, setEntryValue] = useState('')
@@ -265,6 +268,11 @@ export default function TrackerView() {
   const [trackerModal, setTrackerModal] = useState({ open: false, tracker: null })
   const [dragOver, setDragOver] = useState(null)
   const dragIdx = useRef(null)
+
+  useEffect(() => {
+    if (selectedId != null) sessionStorage.setItem('tracker.selectedId', String(selectedId))
+    else sessionStorage.removeItem('tracker.selectedId')
+  }, [selectedId])
 
   useEffect(() => {
     getTrackers().then(r => { setTrackers(r.data); setLoadingTrackers(false) })

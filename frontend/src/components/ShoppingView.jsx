@@ -58,7 +58,10 @@ function ShopModal({ shop, onSuccess, onClose }) {
 
 export default function ShoppingView() {
   const [shops, setShops] = useState([])
-  const [selectedShopId, setSelectedShopId] = useState(null)
+  const [selectedShopId, setSelectedShopId] = useState(() => {
+    const v = sessionStorage.getItem('shopping.shopId')
+    return v ? Number(v) : null
+  })
   const [items, setItems] = useState([])
   const [newItemName, setNewItemName] = useState('')
   const [loadingShops, setLoadingShops] = useState(true)
@@ -71,6 +74,11 @@ export default function ShoppingView() {
   const [dragShopOver, setDragShopOver] = useState(null)
   const dragItemIdx = useRef(null)
   const [dragItemOver, setDragItemOver] = useState(null)
+
+  useEffect(() => {
+    if (selectedShopId != null) sessionStorage.setItem('shopping.shopId', String(selectedShopId))
+    else sessionStorage.removeItem('shopping.shopId')
+  }, [selectedShopId])
 
   useEffect(() => {
     getShops()
@@ -158,9 +166,9 @@ export default function ShoppingView() {
   const selectedShop = shops.find((s) => s.id === selectedShopId) ?? null
 
   return (
-    <div className="flex gap-4 items-start">
+    <div className="flex flex-col sm:flex-row gap-4 items-start">
       {/* Shops panel */}
-      <div className="w-56 flex-shrink-0 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="w-full sm:w-56 sm:flex-shrink-0 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <h3 className="text-sm font-semibold text-gray-700">Shops</h3>
           <button
@@ -208,7 +216,7 @@ export default function ShoppingView() {
       </div>
 
       {/* Items panel */}
-      <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="w-full sm:flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
           <div>
             <h3 className="text-sm font-semibold text-gray-700">

@@ -2,14 +2,13 @@ import { useState } from 'react'
 import { addDays, differenceInDays, format, parseISO } from 'date-fns'
 import { createTask, updateTask, deleteTask } from '../api.js'
 
-const today = format(new Date(), 'yyyy-MM-dd')
-
 function durationFromDates(start, end) {
   return Math.max(1, differenceInDays(parseISO(end), parseISO(start)) + 1)
 }
 
 export default function TaskFormModal({ task, projectId, defaultStartDate, onSuccess, onClose }) {
   const isEdit = Boolean(task)
+  const today = format(new Date(), 'yyyy-MM-dd')
   const [form, setForm] = useState({
     name: task?.name || '',
     description: task?.description || '',
@@ -17,6 +16,7 @@ export default function TaskFormModal({ task, projectId, defaultStartDate, onSuc
     duration: task && !task.is_heading ? durationFromDates(task.start_date, task.end_date) : 1,
     completed: task?.completed || false,
     is_heading: task?.is_heading || false,
+    night_time: task?.night_time || false,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -37,7 +37,7 @@ export default function TaskFormModal({ task, projectId, defaultStartDate, onSuc
     }
     setSaving(true)
     setError(null)
-    const payload = { name: form.name, description: form.description, start_date: form.start_date, end_date: computedEndDate, completed: form.completed }
+    const payload = { name: form.name, description: form.description, start_date: form.start_date, end_date: computedEndDate, completed: form.completed, night_time: form.night_time }
     try {
       if (isEdit) {
         await updateTask(task.id, { ...payload, project: task.project, depends_on: task.depends_on, order: task.order })
@@ -107,6 +107,15 @@ export default function TaskFormModal({ task, projectId, defaultStartDate, onSuc
               <span className="text-sm text-gray-700">Completed</span>
             </label>
           )}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.night_time}
+              onChange={(e) => setForm(f => ({ ...f, night_time: e.target.checked }))}
+              className="w-4 h-4 rounded accent-indigo-600"
+            />
+            <span className="text-sm text-gray-700">Night-time task</span>
+          </label>
           {confirmingDelete ? (
             <div className="flex items-center justify-between pt-1 border-t border-red-100 bg-red-50 -mx-6 px-6 py-3 rounded-b-xl">
               <p className="text-sm text-red-700 font-medium">Delete this task?</p>

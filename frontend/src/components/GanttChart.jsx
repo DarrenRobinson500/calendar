@@ -353,6 +353,9 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
                     return <div key={i} style={{ position: 'absolute', left: px(i * DAY_W), top: 0, width: px(DAY_W), height: '100%', background: '#f9fafb', zIndex: 0 }} />
                   })}
 
+                  {/* Today column */}
+                  <div style={{ position: 'absolute', left: 0, top: 0, width: px(DAY_W), height: '100%', background: '#eff6ff', zIndex: 0 }} />
+
                   {/* Task bar */}
                   <div
                     style={{ position: 'absolute', top: px(12), left: px(barL), width: px(barW), height: px(ROW_H - 24), background: task.completed ? '#d1d5db' : isLinkTarget ? '#818cf8' : isSelected ? '#6366f1' : '#4f46e5', borderRadius: 4, display: 'flex', alignItems: 'center', userSelect: 'none', zIndex: 6, boxShadow: isSelected ? '0 0 0 2px #a5b4fc' : '0 1px 3px rgba(0,0,0,.15)', cursor: 'move' }}

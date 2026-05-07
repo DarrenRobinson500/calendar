@@ -105,6 +105,7 @@ export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, o
           const events = dayData?.events || []
           const todos = dayData?.todos || []
           const projectTasks = dayData?.project_tasks || []
+          const nightProjectTasks = dayData?.night_project_tasks || []
           const nightTodos = dayData?.night_todos || []
           const bills = dayData?.bills || []
           const dogVisits = dayData?.dog_visits || []
@@ -173,6 +174,27 @@ export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, o
                     onClick={(e) => e.stopPropagation()}
                     onDoubleClick={(e) => { e.stopPropagation(); goToProject(pt.project_id) }}
                     className="flex items-center gap-1 text-xs bg-violet-100 text-violet-800 rounded px-1 py-0.5 cursor-pointer"
+                    title="Double-click to open project"
+                  >
+                    <span className="flex-1 truncate">
+                      {pt.project_name} – {pt.name}
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleTaskDone(pt.id) }}
+                      className="shrink-0 hover:scale-110 transition-transform"
+                      title="Mark done"
+                    >
+                      ✓
+                    </button>
+                  </div>
+                ))}
+
+                {nightProjectTasks.map((pt) => (
+                  <div
+                    key={`npt-${pt.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    onDoubleClick={(e) => { e.stopPropagation(); goToProject(pt.project_id) }}
+                    className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded px-1 py-0.5 cursor-pointer"
                     title="Double-click to open project"
                   >
                     <span className="flex-1 truncate">

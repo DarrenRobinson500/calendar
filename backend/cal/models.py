@@ -9,6 +9,19 @@ class Setting(models.Model):
         return f"{self.key} = {self.value[:60]}"
 
 
+class Quote(models.Model):
+    text = models.TextField()
+    author = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+
+    def __str__(self):
+        return self.text[:60]
+
+
 class Gratitude(models.Model):
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -84,6 +97,7 @@ class Task(models.Model):
     )
     completed = models.BooleanField(default=False)
     is_heading = models.BooleanField(default=False)
+    night_time = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['order', 'id']
@@ -118,7 +132,7 @@ class Person(models.Model):
 
 
 class Story(models.Model):
-    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='stories')
+    people = models.ManyToManyField(Person, related_name='stories')
     heading = models.CharField(max_length=255, blank=True)
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -127,7 +141,8 @@ class Story(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.person.name}: {self.text[:60]}"
+        names = ', '.join(p.name for p in self.people.all()[:2])
+        return f"{names}: {self.text[:60]}"
 
 
 class Tracker(models.Model):

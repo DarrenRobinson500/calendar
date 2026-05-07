@@ -21,10 +21,11 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBillEdi
   const events = dayData?.events || []
   const todos = dayData?.todos || []
   const projectTasks = dayData?.project_tasks || []
+  const nightProjectTasks = dayData?.night_project_tasks || []
   const nightTodos = dayData?.night_todos || []
   const bills = dayData?.bills || []
   const dogVisits = dayData?.dog_visits || []
-  const total = birthdays.length + events.length + todos.length + projectTasks.length + nightTodos.length + bills.length + dogVisits.length
+  const total = birthdays.length + events.length + todos.length + projectTasks.length + nightProjectTasks.length + nightTodos.length + bills.length + dogVisits.length
 
   const handleTodoDone = async (id) => { await markTodoDone(id); refetch() }
   const handleTaskDone = async (id) => { await markTaskDone(id); refetch() }
@@ -99,6 +100,29 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBillEdi
                 <button
                   onClick={() => handleTaskDone(pt.id)}
                   className="shrink-0 text-lg leading-none text-violet-600 hover:scale-110 transition-transform mt-0.5"
+                  title="Mark done"
+                >
+                  ✓
+                </button>
+              </div>
+            </ItemRow>
+          ))}
+
+          {nightProjectTasks.map((pt) => (
+            <ItemRow
+              key={`npt-${pt.id}`}
+              color="bg-gray-100"
+              onDoubleClick={() => navigate('/projects', { state: { focusProjectId: pt.project_id } })}
+              title="Double-click to open project"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-700">{pt.name}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{pt.project_name}</p>
+                </div>
+                <button
+                  onClick={() => handleTaskDone(pt.id)}
+                  className="shrink-0 text-lg leading-none text-gray-500 hover:scale-110 transition-transform mt-0.5"
                   title="Mark done"
                 >
                   ✓

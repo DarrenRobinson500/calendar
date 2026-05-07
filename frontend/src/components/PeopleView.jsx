@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { format, parseISO } from 'date-fns'
 import {
   getPeopleGroups, createPeopleGroup, updatePeopleGroup, deletePeopleGroup, reorderPeopleGroups,
-  getPeople, createPerson, updatePerson, deletePerson, reorderPeople,
+  getPeople, getAllPeople, createPerson, updatePerson, deletePerson, reorderPeople,
   getStories, createStory, updateStory, deleteStory,
 } from '../api.js'
 
@@ -141,12 +141,21 @@ function PersonModal({ groupId, person, onSuccess, onClose }) {
 
 export default function PeopleView() {
   const [groups, setGroups] = useState([])
-  const [selectedGroupId, setSelectedGroupId] = useState(null)
+  const [selectedGroupId, setSelectedGroupId] = useState(() => {
+    const v = sessionStorage.getItem('people.groupId')
+    return v ? Number(v) : null
+  })
   const [people, setPeople] = useState([])
+  const [allPeople, setAllPeople] = useState([])
   const [selectedPersonId, setSelectedPersonId] = useState(null)
+  const pendingPersonId = useRef(() => {
+    const v = sessionStorage.getItem('people.personId')
+    return v ? Number(v) : null
+  }())
   const [stories, setStories] = useState([])
   const [storyHeading, setStoryHeading] = useState('')
   const [storyText, setStoryText] = useState('')
+  const [storyExtraPeople, setStoryExtraPeople] = useState([])
   const [loadingGroups, setLoadingGroups] = useState(true)
   const [loadingPeople, setLoadingPeople] = useState(false)
   const [loadingStories, setLoadingStories] = useState(false)
@@ -165,21 +174,41 @@ export default function PeopleView() {
   const [dragPersonOver, setDragPersonOver] = useState(null)
 
   useEffect(() => {
+    if (selectedGroupId != null) sessionStorage.setItem('people.groupId', String(selectedGroupId))
+    else sessionStorage.removeItem('people.groupId')
+  }, [selectedGroupId])
+
+  useEffect(() => {
+    if (selectedPersonId != null) sessionStorage.setItem('people.personId', String(selectedPersonId))
+    else sessionStorage.removeItem('people.personId')
+  }, [selectedPersonId])
+
+  useEffect(() => {
     getPeopleGroups()
       .then((res) => { setGroups(res.data); setLoadingGroups(false) })
       .catch(() => setLoadingGroups(false))
+    getAllPeople().then((res) => setAllPeople(res.data))
   }, [])
 
   useEffect(() => {
     if (!selectedGroupId) { setPeople([]); setSelectedPersonId(null); return }
     setLoadingPeople(true)
     getPeople(selectedGroupId)
-      .then((res) => { setPeople(res.data); setLoadingPeople(false) })
+      .then((res) => {
+        setPeople(res.data)
+        setLoadingPeople(false)
+        if (pendingPersonId.current != null) {
+          const found = res.data.find((p) => p.id === pendingPersonId.current)
+          if (found) setSelectedPersonId(found.id)
+          pendingPersonId.current = null
+        }
+      })
       .catch(() => setLoadingPeople(false))
   }, [selectedGroupId])
 
   useEffect(() => {
     if (!selectedPersonId) { setStories([]); return }
+    setStoryExtraPeople([])
     setLoadingStories(true)
     getStories(selectedPersonId)
       .then((res) => { setStories(res.data); setLoadingStories(false) })
@@ -215,10 +244,15 @@ export default function PeopleView() {
     if (!storyHeading.trim() || !selectedPersonId) return
     setSavingStory(true)
     try {
-      const res = await createStory({ person: selectedPersonId, heading: storyHeading.trim(), text: storyText.trim() })
+      const res = await createStory({
+        people: [selectedPersonId, ...storyExtraPeople],
+        heading: storyHeading.trim(),
+        text: storyText.trim(),
+      })
       setStories((s) => [res.data, ...s])
       setStoryHeading('')
       setStoryText('')
+      setStoryExtraPeople([])
       storyRef.current?.focus()
     } finally {
       setSavingStory(false)
@@ -234,7 +268,10 @@ export default function PeopleView() {
   const handleSaveStory = async (e) => {
     e.preventDefault()
     if (!editingStory) return
-    const res = await updateStory(editingStory.id, { heading: editingStory.heading, text: editingStory.text })
+    const people = editingStory.people.includes(selectedPersonId)
+      ? editingStory.people
+      : [selectedPersonId, ...editingStory.people]
+    const res = await updateStory(editingStory.id, { people, heading: editingStory.heading, text: editingStory.text })
     setStories((s) => s.map((x) => x.id === editingStory.id ? res.data : x))
     setEditingStory(null)
   }
@@ -421,6 +458,26 @@ export default function PeopleView() {
                 placeholder="Story…"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
+              {allPeople.filter((p) => p.id !== selectedPersonId).length > 0 && (
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Also involves</p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {allPeople.filter((p) => p.id !== selectedPersonId).map((p) => (
+                      <label key={p.id} className="flex items-center gap-1.5 text-xs cursor-pointer text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={storyExtraPeople.includes(p.id)}
+                          onChange={(e) => setStoryExtraPeople((prev) =>
+                            e.target.checked ? [...prev, p.id] : prev.filter((x) => x !== p.id)
+                          )}
+                          className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600"
+                        />
+                        {p.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <p className="text-xs text-gray-400">Enter in story to submit · Shift+Enter for new line</p>
                 <button
@@ -458,6 +515,27 @@ export default function PeopleView() {
                           placeholder="Story…"
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                         />
+                        {allPeople.filter((p) => p.id !== selectedPersonId).length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-400 mb-1">Also involves</p>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1">
+                              {allPeople.filter((p) => p.id !== selectedPersonId).map((p) => (
+                                <label key={p.id} className="flex items-center gap-1.5 text-xs cursor-pointer text-gray-600">
+                                  <input
+                                    type="checkbox"
+                                    checked={editingStory.people.includes(p.id)}
+                                    onChange={(e) => setEditingStory((s) => ({
+                                      ...s,
+                                      people: e.target.checked ? [...s.people, p.id] : s.people.filter((x) => x !== p.id),
+                                    }))}
+                                    className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600"
+                                  />
+                                  {p.name}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         <div className="flex justify-end gap-2">
                           <button type="button" onClick={() => setEditingStory(null)} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
                           <button type="submit" className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
@@ -469,10 +547,19 @@ export default function PeopleView() {
                           {story.heading && <p className="text-gray-800 text-sm font-semibold mb-1">{story.heading}</p>}
                           {story.text && <p className="text-gray-700 text-sm whitespace-pre-wrap">{story.text}</p>}
                           <p className="text-xs text-gray-400 mt-1">{format(parseISO(story.created_at), 'EEE d MMM yyyy, h:mm a')}</p>
+                          {story.people.filter((id) => id !== selectedPersonId).length > 0 && (
+                            <p className="text-xs text-blue-400 mt-0.5">
+                              Also: {story.people
+                                .filter((id) => id !== selectedPersonId)
+                                .map((id) => allPeople.find((p) => p.id === id)?.name)
+                                .filter(Boolean)
+                                .join(', ')}
+                            </p>
+                          )}
                         </div>
                         <div className="shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 mt-0.5">
                           <button
-                            onClick={() => setEditingStory({ id: story.id, heading: story.heading, text: story.text })}
+                            onClick={() => setEditingStory({ id: story.id, heading: story.heading, text: story.text, people: story.people.filter((id) => id !== selectedPersonId) })}
                             className="text-gray-400 hover:text-blue-500 transition-colors text-xs px-1"
                             title="Edit"
                           >✎</button>

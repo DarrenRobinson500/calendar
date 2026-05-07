@@ -83,10 +83,11 @@ export default function ProjectView() {
 
   const isMultiProject = visibleProjectIds.size > 1
 
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
   const ganttRows = projects
     .filter(p => visibleProjectIds.has(p.id))
     .flatMap(p => {
-      const tasks = tasksByProject[p.id] || []
+      const tasks = (tasksByProject[p.id] || []).filter(t => !(t.completed && t.end_date < todayStr))
       return [{ id: `header-${p.id}`, isHeader: true, name: p.name, projectId: p.id }, ...tasks]
     })
 

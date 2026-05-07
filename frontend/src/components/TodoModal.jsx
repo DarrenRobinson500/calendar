@@ -2,10 +2,9 @@ import { useState } from 'react'
 import { format } from 'date-fns'
 import { createTodo, updateTodo, deleteTodo } from '../api.js'
 
-const today = format(new Date(), 'yyyy-MM-dd')
-
 export default function TodoModal({ todo, onSuccess, onClose }) {
   const isEdit = Boolean(todo)
+  const today = format(new Date(), 'yyyy-MM-dd')
   const [form, setForm] = useState({
     name: todo?.name || '',
     description: todo?.description || '',

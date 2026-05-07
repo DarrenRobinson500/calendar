@@ -25,7 +25,13 @@
       "PowerShell(Get-ChildItem *)",
       "Bash(\"/c/Users/darre/PycharmProjects/calendar/calproject/backend/.venv/Scripts/python.exe\" manage.py makemigrations)",
       "Bash(\"/c/Users/darre/PycharmProjects/calendar/calproject/backend/.venv/Scripts/python.exe\" manage.py migrate)",
-      "Bash(\"/c/Users/darre/PycharmProjects/calendar/calproject/backend/.venv/Scripts/python.exe\" manage.py check)"
+      "Bash(\"/c/Users/darre/PycharmProjects/calendar/calproject/backend/.venv/Scripts/python.exe\" manage.py check)",
+      "Bash(grep -E \"\\\\.\\(jsx|js|tsx|ts\\)$\")",
+      "Bash(.venv\\\\Scripts\\\\python.exe manage.py migrate)",
+      "Bash(python manage.py migrate cal 0021_task_night_time)",
+      "Bash(\"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" manage.py migrate)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\cal\\\\migrations\\\\\" | Where-Object { $_.Name -match \"^\\\\d\" } | Sort-Object Name | Select-Object -Last 5 -ExpandProperty Name)",
+      "Bash(\".venv\\\\Scripts\\\\python.exe\" manage.py migrate)"
     ]
   }
 }
