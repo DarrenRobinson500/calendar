@@ -165,17 +165,40 @@ export default function ProjectView() {
   const handleSave = async (updatedTasks, type) => {
     const realTasks = updatedTasks.filter(t => !t.isHeader)
     if (type === 'reorder') {
-      // Save per-project so cross-project drags don't corrupt order values
       await Promise.all([...visibleProjectIds].map(pid => {
         const ids = realTasks
           .filter(t => tasksByProject[pid]?.some(orig => orig.id === t.id))
           .map(t => t.id)
         return reorderTasks(ids)
       }))
+      setTasksByProject(prev => {
+        const next = { ...prev }
+        for (const pid of visibleProjectIds) {
+          if (!next[pid]) continue
+          const orderedIds = realTasks
+            .filter(t => next[pid].some(orig => orig.id === t.id))
+            .map(t => t.id)
+          next[pid] = [...next[pid]].sort((a, b) => {
+            const ai = orderedIds.indexOf(a.id)
+            const bi = orderedIds.indexOf(b.id)
+            return (ai === -1 ? Infinity : ai) - (bi === -1 ? Infinity : bi)
+          })
+        }
+        return next
+      })
     } else {
       await bulkUpdateTasks(realTasks.map(t => ({ id: t.id, start_date: t.start_date, end_date: t.end_date })))
+      setTasksByProject(prev => {
+        const next = { ...prev }
+        for (const pid of Object.keys(next)) {
+          next[pid] = next[pid].map(task => {
+            const updated = realTasks.find(t => t.id === task.id)
+            return updated ? { ...task, start_date: updated.start_date, end_date: updated.end_date } : task
+          })
+        }
+        return next
+      })
     }
-    triggerRefresh()
   }
 
   const handleDependencyCreate = async (taskId, dependsOnId) => {
@@ -208,7 +231,8 @@ export default function ProjectView() {
     })
     if (changed.length) await bulkUpdateTasks(changed.map(t => ({ id: t.id, start_date: t.start_date, end_date: t.end_date })))
 
-    triggerRefresh()
+    const pid = [...visibleProjectIds].find(pid => tasksByProject[pid]?.some(t => t.id === taskId))
+    if (pid != null) setTasksByProject(prev => ({ ...prev, [pid]: updated }))
   }
 
   const handleDeleteLink = async (taskId) => {
@@ -216,12 +240,24 @@ export default function ProjectView() {
     const task = projectTasks.find(t => t.id === taskId)
     if (!task) return
     await updateTask(taskId, { ...task, depends_on: null })
-    triggerRefresh()
+    const pid = [...visibleProjectIds].find(pid => tasksByProject[pid]?.some(t => t.id === taskId))
+    if (pid != null) {
+      setTasksByProject(prev => ({
+        ...prev,
+        [pid]: prev[pid].map(t => t.id === taskId ? { ...t, depends_on: null } : t),
+      }))
+    }
   }
 
   const handleTaskDone = async (taskId) => {
-    await markTaskDone(taskId)
-    triggerRefresh()
+    const res = await markTaskDone(taskId)
+    const pid = [...visibleProjectIds].find(pid => tasksByProject[pid]?.some(t => t.id === taskId))
+    if (pid != null) {
+      setTasksByProject(prev => ({
+        ...prev,
+        [pid]: prev[pid].map(t => t.id === taskId ? res.data : t),
+      }))
+    }
   }
 
   const handleTaskSelect = (taskId) => {
