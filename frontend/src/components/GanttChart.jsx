@@ -331,7 +331,7 @@ export default function GanttChart({ tasks: propTasks, onSave, onDependencyCreat
                   <span
                     style={{ fontSize: 13, color: task.completed ? '#9ca3af' : isSelected ? '#4338ca' : '#374151', fontWeight: isSelected ? 600 : 400, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flex: 1, textDecoration: task.completed ? 'line-through' : 'none' }}
                     onDoubleClick={(e) => { e.stopPropagation(); onTaskEdit(task) }}
-                    title="Double-click to edit"
+                    title={task.description ? `${task.name}\n${task.description}` : task.name}
                   >{task.name}</span>
                   {onTaskDone && (
                     <button
