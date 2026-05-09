@@ -116,7 +116,13 @@ export default function ClaudeView() {
 
           {usedNum !== null && (
             <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Claude used</p>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Claude used</p>
+                <button
+                  onClick={() => setPercentUsed(v => String(Math.min(100, parseFloat(v || '0') + 1)))}
+                  className="text-xs px-2 py-0.5 rounded border border-gray-300 text-gray-600 hover:bg-gray-100"
+                >+</button>
+              </div>
               <p className="text-3xl font-semibold text-gray-800">{usedNum.toFixed(1)}%</p>
               <div className="mt-3">
                 <ProgressBar percent={usedNum} color={overPace ? 'bg-red-400' : 'bg-green-400'} />
