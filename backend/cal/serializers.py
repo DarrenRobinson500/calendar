@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Event, ToDo, Project, Task, Bill, Quote, Gratitude, PeopleGroup, Person, Story, Tracker, TrackerEntry, Dog, DogVisit, DogStory, Shop, ShoppingItem
+from .models import Event, ToDo, Project, Task, Bill, BillCategory, BillInstance, Quote, Gratitude, PeopleGroup, Person, Story, Tracker, TrackerEntry, Dog, DogVisit, DogStory, Shop, ShoppingItem
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -26,10 +26,25 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = ['id', 'project', 'name', 'description', 'start_date', 'end_date', 'order', 'depends_on', 'completed', 'is_heading', 'night_time', 'snoozed_until']
 
 
+class BillCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BillCategory
+        fields = ['id', 'name', 'order']
+
+
+class BillInstanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BillInstance
+        fields = ['id', 'bill', 'date', 'amount']
+
+
 class BillSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True, allow_null=True, default=None)
+    instances_count = serializers.IntegerField(source='instances.count', read_only=True)
+
     class Meta:
         model = Bill
-        fields = ['id', 'name', 'due_date', 'amount', 'frequency_days']
+        fields = ['id', 'name', 'due_date', 'amount', 'frequency_days', 'category', 'category_name', 'instances_count']
 
 
 class QuoteSerializer(serializers.ModelSerializer):

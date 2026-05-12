@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Event, ToDo, Project, Task, Bill, Quote, Gratitude, Setting, PeopleGroup, Person, Story, Tracker, TrackerEntry, Dog, DogVisit, DogStory, Shop, ShoppingItem
-from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BillSerializer, QuoteSerializer, GratitudeSerializer, PeopleGroupSerializer, PersonSerializer, StorySerializer, TrackerSerializer, TrackerEntrySerializer, DogSerializer, DogVisitSerializer, DogStorySerializer, ShopSerializer, ShoppingItemSerializer
+from .models import Event, ToDo, Project, Task, Bill, BillCategory, BillInstance, Quote, Gratitude, Setting, PeopleGroup, Person, Story, Tracker, TrackerEntry, Dog, DogVisit, DogStory, Shop, ShoppingItem
+from .serializers import EventSerializer, ToDoSerializer, ProjectSerializer, TaskSerializer, BillSerializer, BillCategorySerializer, BillInstanceSerializer, QuoteSerializer, GratitudeSerializer, PeopleGroupSerializer, PersonSerializer, StorySerializer, TrackerSerializer, TrackerEntrySerializer, DogSerializer, DogVisitSerializer, DogStorySerializer, ShopSerializer, ShoppingItemSerializer
 
 
 @api_view(['GET'])
@@ -464,7 +464,65 @@ def task_bulk_update(request):
     return Response({'status': 'ok'})
 
 
+# ── Bill Categories ───────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def bill_category_list(request):
+    if request.method == 'GET':
+        return Response(BillCategorySerializer(BillCategory.objects.all(), many=True).data)
+    s = BillCategorySerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT', 'DELETE'])
+def bill_category_detail(request, pk):
+    try:
+        cat = BillCategory.objects.get(pk=pk)
+    except BillCategory.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'PUT':
+        s = BillCategorySerializer(cat, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+    cat.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 # ── Bills ─────────────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+def bill_instance_list(request):
+    if request.method == 'GET':
+        bill_id = request.query_params.get('bill')
+        qs = BillInstance.objects.filter(bill_id=bill_id) if bill_id else BillInstance.objects.all()
+        return Response(BillInstanceSerializer(qs, many=True).data)
+    s = BillInstanceSerializer(data=request.data)
+    if s.is_valid():
+        s.save()
+        return Response(s.data, status=status.HTTP_201_CREATED)
+    return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT', 'DELETE'])
+def bill_instance_detail(request, pk):
+    try:
+        instance = BillInstance.objects.get(pk=pk)
+    except BillInstance.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'PUT':
+        s = BillInstanceSerializer(instance, data=request.data)
+        if s.is_valid():
+            s.save()
+            return Response(s.data)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
+    instance.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 @api_view(['GET', 'POST'])
 def bill_list(request):

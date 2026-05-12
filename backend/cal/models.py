@@ -72,17 +72,43 @@ class Project(models.Model):
         return self.name
 
 
+class BillCategory(models.Model):
+    name = models.CharField(max_length=255)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.name
+
+
 class Bill(models.Model):
     name = models.CharField(max_length=255)
     due_date = models.DateField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     frequency_days = models.PositiveIntegerField()
+    category = models.ForeignKey(
+        BillCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name='bills'
+    )
 
     class Meta:
         ordering = ['due_date', 'name']
 
     def __str__(self):
         return f"{self.name} (${self.amount}, due {self.due_date})"
+
+
+class BillInstance(models.Model):
+    bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='instances')
+    date = models.DateField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.bill.name} {self.date}: ${self.amount}"
 
 
 class Task(models.Model):
