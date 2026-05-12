@@ -25,7 +25,6 @@ urlpatterns = [
     path('bill-instances/', views.bill_instance_list),
     path('bill-instances/<int:pk>/', views.bill_instance_detail),
     path('bills/', views.bill_list),
-    path('bills/<int:pk>/done/', views.bill_done),
     path('bills/<int:pk>/', views.bill_detail),
     path('quotes/', views.quote_list),
     path('quotes/reorder/', views.quote_reorder),

@@ -126,8 +126,6 @@ export default function BillModal({ bill, onSuccess, onClose }) {
   const isEdit = Boolean(bill)
   const [form, setForm] = useState({
     name: bill?.name || '',
-    due_date: bill?.due_date || today,
-    amount: bill?.amount || '',
     frequency_days: bill?.frequency_days || '',
     category: bill?.category != null ? String(bill.category) : '',
   })
@@ -175,7 +173,6 @@ export default function BillModal({ bill, onSuccess, onClose }) {
       const payload = {
         ...form,
         frequency_days: Number(form.frequency_days),
-        amount: Number(form.amount),
         category: form.category ? Number(form.category) : null,
       }
       if (isEdit) {
@@ -259,28 +256,6 @@ export default function BillModal({ bill, onSuccess, onClose }) {
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-            <input
-              type="date"
-              required
-              value={form.due_date}
-              onChange={set('due_date')}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Amount ($)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              required
-              value={form.amount}
-              onChange={set('amount')}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Frequency (days)</label>
             <input

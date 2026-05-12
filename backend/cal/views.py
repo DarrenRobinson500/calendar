@@ -32,7 +32,10 @@ def calendar_view(request):
     events = Event.objects.filter(date__year=year, date__month=month)
     todos = ToDo.objects.filter(next_due__lte=last_day).order_by('order', 'id')
     people_with_birthdays = Person.objects.filter(birthday__month=month)
-    bills = Bill.objects.filter(due_date__lte=last_day)
+    bill_instances = BillInstance.objects.filter(
+        date__gte=first_day,
+        date__lte=last_day,
+    ).select_related('bill')
 
     days: dict = {}
 
@@ -82,18 +85,15 @@ def calendar_view(request):
             else:
                 days[key]['todos'].append(todo_data)
 
-    for bill in bills:
-        overdue = bill.due_date < today
-        display_date = today if overdue else bill.due_date
-        if first_day <= display_date <= last_day:
-            key = ensure_day(display_date)
-            days[key]['bills'].append({
-                'id': bill.id,
-                'name': bill.name,
-                'amount': str(bill.amount),
-                'due_date': bill.due_date.isoformat(),
-                'overdue': overdue,
-            })
+    for inst in bill_instances:
+        key = ensure_day(inst.date)
+        days[key]['bills'].append({
+            'id': inst.id,
+            'bill_id': inst.bill.id,
+            'name': inst.bill.name,
+            'amount': str(inst.amount),
+            'due_date': inst.date.isoformat(),
+        })
 
     project_tasks = Task.objects.filter(
         start_date__lte=last_day,
@@ -551,17 +551,6 @@ def bill_detail(request, pk):
         return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
     bill.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@api_view(['POST'])
-def bill_done(request, pk):
-    try:
-        bill = Bill.objects.get(pk=pk)
-    except Bill.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    bill.due_date = localdate() + timedelta(days=bill.frequency_days)
-    bill.save()
-    return Response(BillSerializer(bill).data)
 
 
 # ── Quotes ────────────────────────────────────────────────────────────────────

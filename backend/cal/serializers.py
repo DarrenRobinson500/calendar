@@ -44,7 +44,7 @@ class BillSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Bill
-        fields = ['id', 'name', 'due_date', 'amount', 'frequency_days', 'category', 'category_name', 'instances_count']
+        fields = ['id', 'name', 'frequency_days', 'category', 'category_name', 'instances_count']
 
 
 class QuoteSerializer(serializers.ModelSerializer):

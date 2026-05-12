@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { format, getDay, getDaysInMonth, addMonths, subMonths, parseISO } from 'date-fns'
-import { getCalendar, markTodoDone, markTaskDone, snoozeTask, markBillDone } from '../api.js'
+import { getCalendar, markTodoDone, markTaskDone, snoozeTask, deleteBillInstance } from '../api.js'
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -55,7 +55,7 @@ export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, o
   }
 
   const handleBillDone = async (billId) => {
-    await markBillDone(billId)
+    await deleteBillInstance(billId)
     refetch()
   }
 
@@ -258,7 +258,7 @@ export default function CalendarView({ refreshKey, onEventCreate, onEventEdit, o
                     className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded px-1 py-0.5"
                   >
                     <button
-                      onClick={() => onBillEdit(bill)}
+                      onClick={() => onBillEdit({ ...bill, id: bill.bill_id })}
                       className="flex-1 text-left truncate"
                     >
                       {bill.name}

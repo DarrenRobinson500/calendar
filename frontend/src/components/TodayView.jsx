@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format, addDays, parseISO } from 'date-fns'
-import { getCalendar, markTodoDone, markTaskDone, snoozeTask, markBillDone } from '../api.js'
+import { getCalendar, markTodoDone, markTaskDone, snoozeTask, deleteBillInstance } from '../api.js'
 
 function ItemRow({ color, children, onDoubleClick, title }) {
   return (
@@ -30,7 +30,7 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBillEdi
   const handleTodoDone = async (id) => { await markTodoDone(id); refetch() }
   const handleTaskDone = async (id) => { await markTaskDone(id); refetch() }
   const handleTaskSnooze = async (id) => { await snoozeTask(id); refetch() }
-  const handleBillDone = async (id) => { await markBillDone(id); refetch() }
+  const handleBillDone = async (id) => { await deleteBillInstance(id); refetch() }
 
   const date = parseISO(dateKey)
 
@@ -167,7 +167,7 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBillEdi
           {bills.map((bill) => (
             <ItemRow key={`bill-${bill.id}`} color="bg-gray-100">
               <div className="flex items-start gap-3">
-                <button onClick={() => onBillEdit(bill)} className="flex-1 text-left min-w-0">
+                <button onClick={() => onBillEdit({ ...bill, id: bill.bill_id })} className="flex-1 text-left min-w-0">
                   <p className="font-medium text-gray-700">{bill.name}</p>
                   <p className="text-xs text-gray-500 mt-0.5">${Number(bill.amount).toFixed(2)}</p>
                 </button>

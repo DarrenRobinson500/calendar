@@ -42,6 +42,7 @@ export const importData = (data, clear = false) =>
   api.post(`/data/import/${clear ? '?clear=true' : ''}`, data)
 
 export const getBillInstances = (billId) => api.get(`/bill-instances/?bill=${billId}`)
+export const getAllBillInstances = () => api.get('/bill-instances/')
 export const createBillInstance = (data) => api.post('/bill-instances/', data)
 export const updateBillInstance = (id, data) => api.put(`/bill-instances/${id}/`, data)
 export const deleteBillInstance = (id) => api.delete(`/bill-instances/${id}/`)
@@ -55,7 +56,6 @@ export const getBills = () => api.get('/bills/')
 export const createBill = (data) => api.post('/bills/', data)
 export const updateBill = (id, data) => api.put(`/bills/${id}/`, data)
 export const deleteBill = (id) => api.delete(`/bills/${id}/`)
-export const markBillDone = (id) => api.post(`/bills/${id}/done/`)
 
 export const getQuotes = () => api.get('/quotes/')
 export const createQuote = (data) => api.post('/quotes/', data)
