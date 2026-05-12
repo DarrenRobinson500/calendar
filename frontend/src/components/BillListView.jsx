@@ -149,12 +149,7 @@ export default function BillListView({ refreshKey, onBillCreate, onBillEdit }) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">Bills</h2>
-        <button onClick={onBillCreate} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-          + Add Bill
-        </button>
-      </div>
+      <h2 className="text-xl font-semibold text-gray-800 mb-6">Bills</h2>
 
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
@@ -192,7 +187,12 @@ export default function BillListView({ refreshKey, onBillCreate, onBillEdit }) {
 
       {/* ── 2. Bills ────────────────────────────────────────────────────────────── */}
       <section className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">Bills</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-gray-700">Bills</h3>
+          <button onClick={onBillCreate} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+            + Add Bill
+          </button>
+        </div>
         {loading ? (
           <p className="text-gray-400 text-sm">Loading…</p>
         ) : bills.length === 0 ? (
