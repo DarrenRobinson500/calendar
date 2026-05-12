@@ -290,12 +290,21 @@ export default function ProjectView() {
         const newTaskIdx = freshTasks.findIndex(t => t.id === savedInfo.id)
         const reordered = [...freshTasks]
         const [moved] = reordered.splice(newTaskIdx, 1)
-        reordered.splice(anchorIdx + 1, 0, moved)
+        const insertAt = newTaskIdx < anchorIdx ? anchorIdx : anchorIdx + 1
+        reordered.splice(insertAt, 0, moved)
         await reorderTasks(reordered.map(t => t.id))
       }
       triggerRefresh()
       setSelectedTaskId(savedInfo.id)
     } else if (savedInfo?.isNew && savedInfo?.id) {
+      const newTaskIdx = freshTasks.findIndex(t => t.id === savedInfo.id)
+      if (newTaskIdx !== -1 && newTaskIdx !== freshTasks.length - 1) {
+        const reordered = [...freshTasks]
+        const [moved] = reordered.splice(newTaskIdx, 1)
+        reordered.push(moved)
+        await reorderTasks(reordered.map(t => t.id))
+        setTasksByProject(prev => ({ ...prev, [pid]: reordered }))
+      }
       setSelectedTaskId(savedInfo.id)
     } else if (savedInfo?.id && savedInfo?.end_date) {
       const cascaded = cascadeFrom(freshTasks, savedInfo.id, parseISO(savedInfo.end_date))

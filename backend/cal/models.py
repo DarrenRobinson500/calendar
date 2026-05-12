@@ -98,6 +98,7 @@ class Task(models.Model):
     completed = models.BooleanField(default=False)
     is_heading = models.BooleanField(default=False)
     night_time = models.BooleanField(default=False)
+    snoozed_until = models.DateField(null=True, blank=True)
 
     class Meta:
         ordering = ['order', 'id']

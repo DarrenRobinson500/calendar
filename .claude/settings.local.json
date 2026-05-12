@@ -31,7 +31,12 @@
       "Bash(python manage.py migrate cal 0021_task_night_time)",
       "Bash(\"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" manage.py migrate)",
       "PowerShell(Get-ChildItem \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\cal\\\\migrations\\\\\" | Where-Object { $_.Name -match \"^\\\\d\" } | Sort-Object Name | Select-Object -Last 5 -ExpandProperty Name)",
-      "Bash(\".venv\\\\Scripts\\\\python.exe\" manage.py migrate)"
+      "Bash(\".venv\\\\Scripts\\\\python.exe\" manage.py migrate)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\" -Recurse -Depth 2)",
+      "Bash(python manage.py makemigrations cal --name add_task_snoozed_until)",
+      "PowerShell(& \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\darre\\\\PycharmProjects\\\\calendar\\\\calproject\\\\backend\\\\manage.py\" makemigrations cal --name add_task_snoozed_until)",
+      "Bash(python manage.py showmigrations cal)",
+      "Bash(.venv\\\\Scripts\\\\python.exe manage.py showmigrations cal)"
     ]
   }
 }

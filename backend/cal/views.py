@@ -101,6 +101,8 @@ def calendar_view(request):
         completed=False,
         is_heading=False,
         project__active=True,
+    ).exclude(
+        snoozed_until__gt=today,
     ).select_related('project').order_by('project__name', 'order', 'id')
 
     for task in project_tasks:
@@ -430,6 +432,17 @@ def task_done(request, pk):
     except Task.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     task.completed = not task.completed
+    task.save()
+    return Response(TaskSerializer(task).data)
+
+
+@api_view(['POST'])
+def task_snooze(request, pk):
+    try:
+        task = Task.objects.get(pk=pk)
+    except Task.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    task.snoozed_until = localdate() + timedelta(days=1)
     task.save()
     return Response(TaskSerializer(task).data)
 

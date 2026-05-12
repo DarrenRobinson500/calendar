@@ -66,6 +66,13 @@ export default function ClaudeView() {
   const elapsed = startDate ? now - startDate : null
   const percentElapsed = elapsed !== null ? (elapsed / WEEK_MS) * 100 : null
 
+  // Auto-advance week when elapsed exceeds 100%
+  useEffect(() => {
+    if (!settingsLoaded || percentElapsed === null || percentElapsed <= 100) return
+    const newStart = new Date(startDate.getTime() + WEEK_MS)
+    setStart(format(newStart, "yyyy-MM-dd'T'HH:mm"))
+  }, [percentElapsed, settingsLoaded])
+
   const usedNum = percentUsed !== '' ? parseFloat(percentUsed) : null
   const evenAt = startDate && usedNum !== null
     ? new Date(startDate.getTime() + (usedNum / 100) * WEEK_MS)

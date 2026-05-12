@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format, addDays, parseISO } from 'date-fns'
-import { getCalendar, markTodoDone, markTaskDone, markBillDone } from '../api.js'
+import { getCalendar, markTodoDone, markTaskDone, snoozeTask, markBillDone } from '../api.js'
 
 function ItemRow({ color, children, onDoubleClick, title }) {
   return (
@@ -29,6 +29,7 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBillEdi
 
   const handleTodoDone = async (id) => { await markTodoDone(id); refetch() }
   const handleTaskDone = async (id) => { await markTaskDone(id); refetch() }
+  const handleTaskSnooze = async (id) => { await snoozeTask(id); refetch() }
   const handleBillDone = async (id) => { await markBillDone(id); refetch() }
 
   const date = parseISO(dateKey)
@@ -98,6 +99,13 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBillEdi
                   <p className="text-xs text-violet-600 mt-0.5">{pt.project_name}</p>
                 </div>
                 <button
+                  onClick={(e) => { e.stopPropagation(); handleTaskSnooze(pt.id) }}
+                  className="shrink-0 text-sm leading-none text-violet-400 hover:text-violet-600 hover:scale-110 transition-transform mt-0.5"
+                  title="Done for today (task not complete)"
+                >
+                  ⏸
+                </button>
+                <button
                   onClick={() => handleTaskDone(pt.id)}
                   className="shrink-0 text-lg leading-none text-violet-600 hover:scale-110 transition-transform mt-0.5"
                   title="Mark done"
@@ -120,6 +128,13 @@ function DayColumn({ label, dateKey, dayData, onEventEdit, onTodoEdit, onBillEdi
                   <p className="font-medium text-gray-700">{pt.name}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{pt.project_name}</p>
                 </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleTaskSnooze(pt.id) }}
+                  className="shrink-0 text-sm leading-none text-gray-400 hover:text-gray-600 hover:scale-110 transition-transform mt-0.5"
+                  title="Done for today (task not complete)"
+                >
+                  ⏸
+                </button>
                 <button
                   onClick={() => handleTaskDone(pt.id)}
                   className="shrink-0 text-lg leading-none text-gray-500 hover:scale-110 transition-transform mt-0.5"
